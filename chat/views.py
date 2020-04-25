@@ -3,7 +3,7 @@ from django.http import JsonResponse
 # Create your views here.
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, get_object_or_404
-from .models import Chat, Room, Player
+from .models import Room, Player
 from django.utils.crypto import get_random_string
 import urllib.request
 import random

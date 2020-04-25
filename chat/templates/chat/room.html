@@ -22,6 +22,15 @@
     {% endfor %}
     <script>
 
+        function parseInput(message) {
+            const regex = new RegExp('/w[ ][A-Za-z_]*')
+            
+            const splitReceiver = regex.exec(message) ? regex.exec(message)[0] : '' // /w example_mame
+            const receiver = splitReceiver ? splitReceiver.split(' ')[1] : '{{ room_name }}' // example_name
+            const newMessage = message.replace(splitReceiver + ' ', '')
+            return [receiver, newMessage]
+        }
+
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
         const chatSocket = new WebSocket(
             'ws://'
@@ -33,7 +42,9 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += ( data.message + '\n');
+            if (data.receiver == '{{ room_name }}' || data.receiver == '{{ player }}') {
+                document.querySelector('#chat-log').value += ( data.player + ': ' + data.message + '\n');
+            }
         };
 
         chatSocket.onclose = function(e) {
@@ -49,9 +60,15 @@
 
         document.querySelector('#chat-message-submit').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
-            const message = '{{ player }}: ' + messageInputDom.value;
+            const message = messageInputDom.value;
+            const parsedInput = parseInput(message)
+            const receiver = parsedInput[0]
+            const parsedMessage = parsedInput[1]
             chatSocket.send(JSON.stringify({
-                'message': message
+                'message': parsedMessage,
+                'command': 'new_message',
+                'player': '{{ player }}',
+                'receiver' : receiver
             }));
             messageInputDom.value = '';
         };

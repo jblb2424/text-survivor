@@ -23,21 +23,9 @@ class Player(models.Model):
 
 
 class Message(models.Model):
-    contact = models.ForeignKey(Player, related_name='messages', on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.player.name
-
-
-class Chat(models.Model):
-    participants = models.ManyToManyField(
-        Player, related_name='chats', blank=True)
-    messages = models.ManyToManyField(Message, blank=True)
-
-    def __str__(self):
-        return "{}".format(self.pk)
 
 
 
