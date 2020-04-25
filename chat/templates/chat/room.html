@@ -42,7 +42,7 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            if (data.receiver == '{{ room_name }}' || data.receiver == '{{ player }}') {
+            if (data.receiver == '{{ room_name }}' || data.receiver == '{{ player }}' || data.player == '{{ player }}'){
                 document.querySelector('#chat-log').value += ( data.player + ': ' + data.message + '\n');
             }
         };

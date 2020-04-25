@@ -33,20 +33,25 @@ def load_room(request):
 	return JsonResponse({'room_id': room})
 
 def room(request, room_name):
-	#### Generate Random Username
-	from random_words import RandomWords
-	rw = RandomWords()
-	word1 = rw.random_word()
-	word2 = rw.random_word()
-	unique_name_word = word1 + "_" + word2
+	#### Check if room exists. If not, create it with new player ####
 	new_room = Room.objects.get_or_create(name=room_name)[0]
-	new_player = Player.objects.create(name=unique_name_word, room=new_room)
-	new_room.player_count +=1
-	new_room.save()
+	
+	if request.session.get('player'):
+		current_player = request.session.get('player')
+	else: 
+		rw = RandomWords()
+		word1 = rw.random_word()
+		word2 = rw.random_word()
+		unique_name_word = word1 + "_" + word2
+		new_player = Player.objects.create(name=unique_name_word, room=new_room)
+		request.session['player'] = unique_name_word
+		new_room.player_count +=1
+		new_room.save()
+		current_player = unique_name_word
+
 	survivors = Player.objects.filter(room=new_room).values('name', 'id')
-	print(new_room.player_count)
 	return render(request, 'chat/room.html', {
 		'room_name': room_name,
-		'player': unique_name_word,
+		'player': current_player,
 		'survivors': survivors
 	})
