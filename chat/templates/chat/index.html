@@ -1,12 +1,12 @@
-<!-- chat/templates/chat/index.html -->
-<!DOCTYPE html>
-<html>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
-<head>
-    <meta charset="utf-8"/>
-    <title>Chat Rooms</title>
-</head>
-<body>
+{% extends 'site_base.html' %}
+{% load render_bundle get_files from webpack_loader %}
+
+{% block bundle %}
+    {% render_bundle 'index' %}
+{% endblock %}
+
+{% block content %}
+
     Welcome to Text Survivor<br>
         <div> Username </div>
         <input id="username-input" minlength="4" maxlength="10"> </input>
@@ -14,17 +14,4 @@
         <br/>
         <button id="play"> Play </button>
     </div>
-    <script>
-        document.querySelector('#play').onclick = function(e) {
-            $.ajax({
-                url: 'http://127.0.0.1:8000/home/load_room/',
-                type: "GET",
-                dataType: "json",
-                success: function (data) {
-                window.location.pathname = '/home/' + data.room_id + '/';
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+{% endblock %}

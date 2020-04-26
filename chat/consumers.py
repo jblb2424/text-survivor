@@ -7,6 +7,7 @@ from .views import get_last_10_messages, get_current_chat
 from channels.generic.websocket import AsyncWebsocketConsumer
 import datetime
 from channels.db import database_sync_to_async
+from .syncronous_requests import save_message
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -62,18 +63,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def vote(self, event):
         vote = event['player']
         votee = event['votee']
-        print(votee)
         await self.send(text_data=json.dumps({
-            'receiver': event['receiver'],
+            'vote': event['receiver'],
             'player': event['player']
         }))
 
     # Receive message from room group
     async def chat_message(self, event):
         message = event['message']
-        player = await database_sync_to_async(Player.objects.get)(name=event['player'])
-        message_obj = Message(player=player, content=event['message'])
-        await database_sync_to_async(message_obj.save)()
+        save_message(event)
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message,
