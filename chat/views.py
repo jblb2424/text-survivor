@@ -20,6 +20,8 @@ def get_current_chat(chatId):
 
 
 def index(request):
+	print(request.session.get('player'))
+	request.session.clear()
 	return render(request, 'chat/index.html')
 
 
@@ -35,6 +37,8 @@ def load_room(request):
 def room(request, room_name):
 	#### Check if room exists. If not, create it with new player ####
 	new_room = Room.objects.get_or_create(name=room_name)[0]
+	if new_room.player_count > 10:
+		return redirect('/home/')
 	
 	if request.session.get('player'):
 		current_player = request.session.get('player')

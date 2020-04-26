@@ -18,7 +18,7 @@
     {{ room_name|json_script:"room-name" }}
     <div> Survivors </div> <br><br>
     {% for survivor in survivors %}
-    <div> <span> {{ survivor.name }} </span> <div>
+    <div class='vote-selection' style="cursor:pointer;" <span> {{ survivor.name }} </span> <div>
     {% endfor %}
     <script>
 
@@ -32,6 +32,7 @@
         }
 
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        //My wonderful websockers
         const chatSocket = new WebSocket(
             'ws://'
             + window.location.host
@@ -39,7 +40,6 @@
             + roomName
             + '/'
         );
-
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
             if (data.receiver == '{{ room_name }}' || data.receiver == '{{ player }}' || data.player == '{{ player }}'){
@@ -58,6 +58,15 @@
             }
         };
 
+        document.querySelector('.vote-selection').onclick = function(e) {
+             chatSocket.send(JSON.stringify({
+                'voter': '{{ player }}',
+                'votee' : 'blah',
+                'command': 'vote'
+            }));        
+        }
+
+
         document.querySelector('#chat-message-submit').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
@@ -66,7 +75,7 @@
             const parsedMessage = parsedInput[1]
             chatSocket.send(JSON.stringify({
                 'message': parsedMessage,
-                'command': 'new_message',
+                'command': 'chat_message',
                 'player': '{{ player }}',
                 'receiver' : receiver
             }));
