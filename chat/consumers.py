@@ -58,10 +58,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 
 
-    #### commands that 
+    #### possible responses to receiving info from websocket ####
     async def vote(self, event):
         vote = event['player']
         votee = event['votee']
+        print(votee)
         await self.send(text_data=json.dumps({
             'receiver': event['receiver'],
             'player': event['player']
