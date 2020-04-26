@@ -2,3 +2,27 @@ body
 {
   color: red;
 }
+
+
+
+
+
+.game-body {
+  display: flex;
+
+  .chat-area {
+    display: flex;
+    flex-direction: column;
+    width: 40%;	
+  }
+
+  .survivors-list {
+    margin-left: 10%;
+    display: flex;
+    flex-direction: column;
+    .vote-selection {
+      cursor: pointer;
+      margin: 8px 0px;
+    }
+  }
+}

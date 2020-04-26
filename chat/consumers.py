@@ -2,18 +2,16 @@ from django.contrib.auth import get_user_model
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
-from .models import Message, Player
+from .models import Message, Player, Vote, Room
 from .views import get_last_10_messages, get_current_chat
 from channels.generic.websocket import AsyncWebsocketConsumer
 import datetime
 from channels.db import database_sync_to_async
-from .syncronous_requests import save_message
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
-
         # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -30,7 +28,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
 
-
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         command = text_data_json.get('command')
@@ -38,7 +35,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 
         #Message Props
-        receiver = text_data_json.get('receiver') or self.room_group_name
+        receiver = text_data_json.get('receiver') or self.room_name
         message = text_data_json.get('message')
 
         #Vote Props
@@ -61,17 +58,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     #### possible responses to receiving info from websocket ####
     async def vote(self, event):
-        vote = event['player']
+        voter = event['player']
         votee = event['votee']
-        await self.send(text_data=json.dumps({
-            'vote': event['receiver'],
-            'player': event['player']
-        }))
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        vote = Vote(voter=voter, votee=votee, room=room_obj)
+        await database_sync_to_async(vote.save)()
+
 
     # Receive message from room group
     async def chat_message(self, event):
         message = event['message']
-        save_message(event)
+        player = await database_sync_to_async(Player.objects.get)(name=event['player'])
+        message_obj = Message(player=player, content=event['message'])
+        await database_sync_to_async(message_obj.save)()
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message,

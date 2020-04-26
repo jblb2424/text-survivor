@@ -1,4 +1,3 @@
-
 $(document).ready(() => {
   document.querySelector('#play').onclick = function(e) {
     $.ajax({

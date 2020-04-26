@@ -37,7 +37,7 @@ window.initChat = (room, player) => {
 
   document.querySelector('.vote-selection').onclick = function(e) {
     chatSocket.send(JSON.stringify({
-        'voter': player,
+        'player': player,
         'votee' : e.target.id,
         'command': 'vote'
     }));
