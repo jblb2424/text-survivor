@@ -7,6 +7,19 @@ from .views import get_last_10_messages, get_current_chat
 from channels.generic.websocket import AsyncWebsocketConsumer
 import datetime
 from channels.db import database_sync_to_async
+from asgiref.sync import sync_to_async
+from django.db.models import Count
+import operator
+
+
+def format_votes(grouped_players):
+    ret_dict = {}
+    for player in grouped_players:
+        ret_dict[player['votee']] = player['total']
+
+    ret_dict['current_loser'] = max(ret_dict.items(), key=operator.itemgetter(1))[0]
+    return ret_dict
+    
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -55,7 +68,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
 
-
     #### possible responses to receiving info from websocket ####
     async def vote(self, event):
         voter = event['player']
@@ -63,6 +75,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
         vote = Vote(voter=voter, votee=votee, room=room_obj)
         await database_sync_to_async(vote.save)()
+        all_current_votes =  await database_sync_to_async(Vote.objects.filter)(room=room_obj)
+        grouped = all_current_votes.values('votee').annotate(total=Count('id'))
+        results = await sync_to_async(format_votes)(grouped)
+        await self.send(text_data=json.dumps(results))
 
 
     # Receive message from room group
