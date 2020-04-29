@@ -9,16 +9,9 @@ import datetime
 from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async
 from django.db.models import Count
-import operator
 
 
-def format_votes(grouped_players):
-    ret_dict = {}
-    for player in grouped_players:
-        ret_dict[player['votee']] = player['total']
-
-    ret_dict['current_loser'] = max(ret_dict.items(), key=operator.itemgetter(1))[0]
-    return ret_dict
+from .syncronous_requests import format_votes, save_message, save_vote
     
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -73,20 +66,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         voter = event['player']
         votee = event['votee']
         room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
-        vote = Vote(voter=voter, votee=votee, room=room_obj)
-        await database_sync_to_async(vote.save)()
+
+        #create vote
+        await save_vote(event, room_obj)
+        #aggregate vote information
         all_current_votes =  await database_sync_to_async(Vote.objects.filter)(room=room_obj)
         grouped = all_current_votes.values('votee').annotate(total=Count('id'))
-        results = await sync_to_async(format_votes)(grouped)
+        results = await format_votes(grouped)
+
         await self.send(text_data=json.dumps(results))
 
 
     # Receive message from room group
     async def chat_message(self, event):
         message = event['message']
-        player = await database_sync_to_async(Player.objects.get)(name=event['player'])
-        message_obj = Message(player=player, content=event['message'])
-        await database_sync_to_async(message_obj.save)()
+        await save_message(event)
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message,

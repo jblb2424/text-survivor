@@ -35,13 +35,13 @@ window.initChat = (room, player) => {
     }
   };
 
-  document.querySelector('.vote-selection').onclick = function(e) {
+  $('.vote-selection').click(e => {
     chatSocket.send(JSON.stringify({
         'player': player,
         'votee' : e.target.id,
         'command': 'vote'
-    }));
-  }
+    }))});
+  
 
 
   document.querySelector('#chat-message-submit').onclick = function(e) {
