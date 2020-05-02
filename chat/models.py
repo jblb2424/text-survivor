@@ -30,10 +30,10 @@ class Vote(models.Model):
     votee = models.CharField(max_length=30)
 
     
-@receiver(pre_delete, sender=Player, dispatch_uid='player_delete_signal')
-def log_deleted_question(sender, instance, using, **kwargs):
-    d = Deleted()
-    room = d.room
-    room.player_count -= 1
+# @receiver(pre_delete, sender=Player, dispatch_uid='player_delete_signal')
+# def log_deleted_question(sender, instance, using, **kwargs):
+#     d = Deleted()
+#     room = d.room
+#     room.player_count -= 1
 
 

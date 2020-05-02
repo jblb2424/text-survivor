@@ -1,4 +1,22 @@
 window.initChat = (room, player) => {
+  //My wonderful websockets
+  const chatSocket = new WebSocket(
+    'ws://'
+    + window.location.host
+    + '/ws/chat/'
+    + room
+    + '/'
+  );
+  chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    if (data.receiver === room || data.receiver === player || data.player === player){
+        document.querySelector('#chat-log').value += ( data.player + ': ' + data.message + '\n');
+    }
+    if(data.round_over === true && data.current_loser === player) {
+      window.location.pathname = '/home/'
+    }
+  };
+
   function parseInput(message) {
     const regex = new RegExp('/w[ ][A-Za-z_]*')
 
@@ -7,22 +25,6 @@ window.initChat = (room, player) => {
     const newMessage = message.replace(splitReceiver + ' ', '')
     return [receiver, newMessage]
   }
-
-  const roomName = JSON.parse(document.getElementById('room-name').textContent);
-  //My wonderful websockers
-  const chatSocket = new WebSocket(
-    'ws://'
-    + window.location.host
-    + '/ws/chat/'
-    + roomName
-    + '/'
-  );
-  chatSocket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-    if (data.receiver == room || data.receiver == player || data.player == player){
-        document.querySelector('#chat-log').value += ( data.player + ': ' + data.message + '\n');
-    }
-  };
 
   chatSocket.onclose = function(e) {
     console.error('Chat socket closed unexpectedly');

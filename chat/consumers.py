@@ -3,7 +3,6 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 import json
 from .models import Message, Player, Vote, Room
-from .views import get_last_10_messages, get_current_chat
 from channels.generic.websocket import AsyncWebsocketConsumer
 import datetime
 from channels.db import database_sync_to_async
@@ -11,7 +10,7 @@ from asgiref.sync import sync_to_async
 from django.db.models import Count
 
 
-from .syncronous_requests import format_votes, save_message, save_vote
+from .syncronous_requests import format_votes, save_message, save_vote, remove_player
     
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -67,12 +66,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         votee = event['votee']
         room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
 
-        #create vote
         await save_vote(event, room_obj)
+
         #aggregate vote information
         all_current_votes =  await database_sync_to_async(Vote.objects.filter)(room=room_obj)
+        all_current_players = await database_sync_to_async(Player.objects.filter)(room=room_obj)
         grouped = all_current_votes.values('votee').annotate(total=Count('id'))
-        results = await format_votes(grouped)
+        results = await format_votes(grouped, all_current_votes, all_current_players, room_obj)
 
         await self.send(text_data=json.dumps(results))
 

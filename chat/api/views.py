@@ -8,7 +8,7 @@ from rest_framework.generics import (
     UpdateAPIView
 )
 
-User = get_user_model()
+
 
 
 # class ChatListView(ListAPIView):

@@ -7,16 +7,16 @@ from .models import Room, Player
 from django.utils.crypto import get_random_string
 import urllib.request
 import random
+from django.views.decorators.csrf import csrf_exempt
 from random_words import RandomWords
 User = get_user_model()
-
-
-def get_last_10_messages(chatId):
-    chat = get_object_or_404(Chat, id=chatId)
-    return chat.messages.order_by('-timestamp').all()[:10]
-
-def get_current_chat(chatId):
-    return get_object_or_404(Chat, id=chatId)
+from rest_framework.generics import (
+    ListAPIView,
+    RetrieveAPIView,
+    CreateAPIView,
+    DestroyAPIView,
+    UpdateAPIView
+)
 
 
 def index(request):
@@ -54,8 +54,17 @@ def room(request, room_name):
 		current_player = unique_name_word
 
 	survivors = Player.objects.filter(room=new_room).values('name', 'id')
+	print(survivors)
 	return render(request, 'chat/room.html', {
 		'room_name': room_name,
 		'player': current_player,
 		'survivors': survivors
 	})
+
+#Fix this
+@csrf_exempt
+def remove_player(request):
+	player = request.POST.get("player")
+	Player.objects.get(name=player).delete()
+	#What to return in the response?
+	return JsonResponse({'status': 200})
