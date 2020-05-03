@@ -11,9 +11,8 @@
     </div>
     <div class='game-body'>
         <div class="chat-area">
-        <textarea id="chat-log" cols="100" rows="50"></textarea><br>
-        <input id="chat-message-input" type="text" size="100"><br>
-        <input id="chat-message-submit" type="button" value="Send"><br><br>
+        <textarea id="chat-log" cols="100" rows="34" readonly></textarea>
+        <input id="chat-message-input" type="text" size="100" placeholder="Send Message...">
         </div>
         {{ room_name|json_script:"room-name" }}
         <div class='survivors-list'>
@@ -25,5 +24,5 @@
     </div>
 {% endblock %}
 {% block extra_js %}
-    window.initChat('{{ room_name }}', '{{ player }}');
+    window.initChat('{{ room_name }}', '{{ player }}', {{survivors|safe}});
 {% endblock %}

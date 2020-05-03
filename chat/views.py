@@ -9,7 +9,9 @@ import urllib.request
 import random
 from django.views.decorators.csrf import csrf_exempt
 from random_words import RandomWords
+from django.core import serializers
 User = get_user_model()
+import json
 from rest_framework.generics import (
     ListAPIView,
     RetrieveAPIView,
@@ -54,11 +56,12 @@ def room(request, room_name):
 		new_room.save()
 		current_player = unique_name_word
 
-	survivors = Player.objects.filter(room=new_room).values('name', 'id')
+	survivors = Player.objects.filter(room=new_room)
+	survivor_list = [{'name': survivor.name} for survivor in survivors]
 	return render(request, 'chat/room.html', {
 		'room_name': room_name,
 		'player': current_player,
-		'survivors': survivors
+		'survivors': survivor_list
 	})
 
 #Fix this

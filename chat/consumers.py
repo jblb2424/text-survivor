@@ -23,13 +23,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         await self.accept()
-        #Begin timer for each round when lobby is made
-        while True:
-            await asyncio.sleep(240)
-            room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
-            await handle_timeup(room_obj)
-            results = await aggregate_votes(room_obj)
-            await self.send(text_data=json.dumps(results))
+        # #Begin timer for each round when lobby is made
+        # while True:
+        #     await asyncio.sleep(240)
+        #     room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        #     await handle_timeup(room_obj)
+        #     results = await aggregate_votes(room_obj)
+        #     await self.send(text_data=json.dumps(results))
 
     async def disconnect(self, close_code):
         # Leave room group
@@ -43,7 +43,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         command = text_data_json.get('command')
         player_name = text_data_json.get('player')
-
+        print(text_data_json)
 
         #Message Props
         receiver = text_data_json.get('receiver') or self.room_name
