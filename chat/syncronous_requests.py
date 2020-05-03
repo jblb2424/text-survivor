@@ -6,7 +6,7 @@ from .models import Message, Player, Vote, Room
 
 #A utility file of common synronous actions we need to take
 def handle_round_end(ret_dict, room_obj):
-	print(Player.objects.get(name=ret_dict['current_loser']).delete())
+	Player.objects.filter(name=ret_dict['current_loser']).delete()
 	Vote.objects.filter(room=room_obj).delete()
 	room_obj.player_count = room_obj.player_count - 1
 	room_obj.game_round = room_obj.game_round + 1
@@ -42,7 +42,6 @@ def format_votes(grouped_players, all_current_votes, all_current_players, room_o
 	ret_dict['current_loser'] = max(ret_dict.items(), key=operator.itemgetter(1))[0]
 	if len(all_current_players) <= len(all_current_votes):
 		ret_dict['round_over'] = True
-		if Player.objects.filter(name=ret_dict['current_loser']).exists(): #check if round end was already handled
-			handle_round_end(ret_dict, room_obj)
+		handle_round_end(ret_dict, room_obj)
 	return ret_dict
 

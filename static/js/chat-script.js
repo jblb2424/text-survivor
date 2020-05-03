@@ -17,6 +17,7 @@ window.initChat = (room, player) => {
         window.location.pathname = '/home/'
       } else {
         $(`#${data.current_loser}`).remove()
+        $('.vote-selection').removeClass('disabled')
       }
     }
   };
@@ -42,6 +43,7 @@ window.initChat = (room, player) => {
   };
 
   $('.vote-selection').click(e => {
+    $('.vote-selection').addClass('disabled');
     chatSocket.send(JSON.stringify({
         'player': player,
         'votee' : e.target.id,

@@ -3,10 +3,6 @@ body
   color: red;
 }
 
-
-
-
-
 .game-body {
   display: flex;
 
@@ -23,6 +19,13 @@ body
     .vote-selection {
       cursor: pointer;
       margin: 8px 0px;
+
+      &.disabled {
+        opacity: 0.38;
+        color: black;
+        pointer-events: none;
+      }
+
     }
   }
 }
