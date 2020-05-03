@@ -33,7 +33,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
 
-    async def receive(self, text_data):
+    async def receive(self, text_data, dispatch_uid='receive_json'):
         text_data_json = json.loads(text_data)
         command = text_data_json.get('command')
         player_name = text_data_json.get('player')

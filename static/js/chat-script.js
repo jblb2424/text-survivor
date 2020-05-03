@@ -12,8 +12,12 @@ window.initChat = (room, player) => {
     if (data.receiver === room || data.receiver === player || data.player === player){
         document.querySelector('#chat-log').value += ( data.player + ': ' + data.message + '\n');
     }
-    if(data.round_over === true && data.current_loser === player) {
-      window.location.pathname = '/home/'
+    if(data.round_over === true) {
+      if(data.current_loser === player) {
+        window.location.pathname = '/home/'
+      } else {
+        $(`#${data.current_loser}`).remove()
+      }
     }
   };
 

@@ -27,6 +27,7 @@ def index(request):
 
 def load_room(request):
 	available_rooms = Room.objects.filter(player_count__lte = 5)
+
 	if len(available_rooms) > 0:
 		room = available_rooms[random.randint(0, len(available_rooms) -1 )].name
 	else:
@@ -54,7 +55,6 @@ def room(request, room_name):
 		current_player = unique_name_word
 
 	survivors = Player.objects.filter(room=new_room).values('name', 'id')
-	print(survivors)
 	return render(request, 'chat/room.html', {
 		'room_name': room_name,
 		'player': current_player,
