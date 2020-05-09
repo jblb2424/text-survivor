@@ -6,19 +6,20 @@
 
 {% block content %}
     <div>
-        <span> Room: </span> <span> {{ room_name }} </span> <br>
         <span> Player: </span>  <span> {{ player }} </span>
     </div>
     <div class='game-body'>
         <div class="chat-area">
-        <textarea id="chat-log" cols="100" rows="34" readonly></textarea>
+        <textarea id="chat-log" cols="100" rows="35" readonly></textarea>
         <input id="chat-message-input" type="text" size="100" placeholder="Send Message...">
         </div>
         {{ room_name|json_script:"room-name" }}
         <div class='survivors-list'>
-            <span> Survivors </span>
             {% for survivor in survivors %}
-                <button class='vote-selection survivor' id='{{ survivor.name }}'> {{ survivor.name }} </button> 
+                <div class='survivor-wrapper'>
+                    <div class='vote-selection survivor'> {{ survivor.name }} </div> 
+                    <div class='vote-button' data-survivor={{ survivor.name }}> Vote </div>
+                </div>
             {% endfor %}
         </div>
     </div>

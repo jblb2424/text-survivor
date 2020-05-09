@@ -12,20 +12,12 @@ window.initChat = (room, player, survivors) => {
     + room
     + '/'
   );
-  chatSocket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-    if (data.receiver === room || data.receiver === player || data.player === player){
-        document.querySelector('#chat-log').value += ( data.player + ': ' + data.message + '\n');
-    }
-    if(data.round_over === true) {
-      if(data.current_loser === player) {
-        window.location.pathname = '/home/'
-      } else {
-        $(`#${data.current_loser}`).remove()
-        $('.vote-selection').removeClass('disabled')
-      }
-    }
-  };
+
+  chatSocket.onopen = function(e) {
+    chatSocket.send(JSON.stringify({
+      'player': player,
+      'command': 'add_player'
+    }))}
 
   function parseInput(message) {
     const regex = new RegExp('/w[ ][A-Za-z_]* ')
@@ -36,9 +28,36 @@ window.initChat = (room, player, survivors) => {
     return receiver
   }
 
+  chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    //Incoming Message
+    if (data.receiver === room || data.receiver === player || data.player === player){
+        document.querySelector('#chat-log').value += ( data.player + ': ' + data.message + '\n');
+    }
+
+    //kick loser if round over
+    if(data.round_over === true) {
+      if(data.current_loser === player) {
+        window.location.pathname = '/home/'
+      } else {
+        $(`.${data.current_loser}`).remove()
+        $('.vote-button').removeClass('disabled')
+      }
+    }
+
+    //Player has joined, create new element
+    if(data.is_new_player && data.player != player) {
+      var survivorDiv = $('.survivor-wrapper').clone()[0]
+      $(survivorDiv).find('.vote-button').attr('data-survivor', data.player)
+      $(survivorDiv).find('.vote-selection').text(data.player)
+      $('.survivors-list').append(survivorDiv)
+    }
+  };
+
   chatSocket.onclose = function(e) {
     console.error('Chat socket closed unexpectedly');
   };
+
   document.querySelector('#chat-message-input').focus();
   document.querySelector('#chat-message-input').onkeyup = function(e) {
     const messageInputDom = document.querySelector('#chat-message-input');
@@ -60,15 +79,16 @@ window.initChat = (room, player, survivors) => {
     }
       messageInputDom.value = '';
       messageInputDom.placeholder = `Send Message...`
+      receiver = room
       $('#chat-message-input').removeClass('private-message')
       }
   };
 
-  $('.vote-selection').click(e => {
-    $('.vote-selection').addClass('disabled');
+  $('.vote-button').click(e => {
+    $('.vote-button').addClass('disabled');
     chatSocket.send(JSON.stringify({
         'player': player,
-        'votee' : e.target.id,
+        'votee' : e.target.getAttribute('data-survivor'),
         'command': 'vote'
     }))});
 

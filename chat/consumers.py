@@ -10,13 +10,14 @@ from asgiref.sync import sync_to_async
 import asyncio
 
 
-from .syncronous_requests import format_votes, save_message, save_vote, remove_player, handle_timeup, aggregate_votes
+from .syncronous_requests import format_votes,save_message, save_vote, remove_player, handle_timeup, aggregate_votes, check_new_player
     
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
+        self.still_voting = True
         # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -24,8 +25,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         await self.accept()
         # #Begin timer for each round when lobby is made
-        # while True:
-        #     await asyncio.sleep(240)
+        # while self.still_voting
+        #     await asyncio.sleep(5)
         #     room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
         #     await handle_timeup(room_obj)
         #     results = await aggregate_votes(room_obj)
@@ -43,7 +44,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         command = text_data_json.get('command')
         player_name = text_data_json.get('player')
-        print(text_data_json)
 
         #Message Props
         receiver = text_data_json.get('receiver') or self.room_name
@@ -76,7 +76,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         #aggregate vote information
         results  = await aggregate_votes(room_obj)
-
         await self.send(text_data=json.dumps(results))
 
 
@@ -89,4 +88,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'message': message,
             'receiver': event['receiver'],
             'player': event['player']
+        }))
+
+
+    async def add_player(self, event):
+        player = event['player']
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        new_player = await check_new_player(player, room_obj)
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps({
+            'is_new_player': new_player,
+            'player': player
         }))

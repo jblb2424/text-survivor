@@ -25,11 +25,14 @@ def format_votes(grouped_players, all_current_votes, all_current_players, room_o
 	ret_dict['current_loser'] = max(ret_dict.items(), key=operator.itemgetter(1))[0]
 	if len(all_current_players) <= len(all_current_votes):
 		handle_round_end(ret_dict, room_obj)
-		if(len(all_current_players) == 2):
+		if(len(all_current_players) == 1):
 			handle_game_end(ret_dict, room_obj)
 	return ret_dict
 
 
+@database_sync_to_async
+def check_new_player(player, room_obj):
+	return Player.objects.filter(name=player, room=room_obj).exists()
 
 @database_sync_to_async
 def save_message(event):
