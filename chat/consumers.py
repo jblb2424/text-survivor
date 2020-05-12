@@ -10,7 +10,7 @@ from asgiref.sync import sync_to_async
 import asyncio
 
 
-from .syncronous_requests import format_votes,save_message, save_vote, remove_player, handle_timeup, aggregate_votes, check_new_player
+from .syncronous_requests import format_votes,save_message, save_vote, remove_player, handle_timeup, aggregate_votes
     
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -68,6 +68,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     #### possible responses to receiving info from websocket ####
     async def vote(self, event):
+        print(event)
         voter = event['player']
         votee = event['votee']
         room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
@@ -94,9 +95,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def add_player(self, event):
         player = event['player']
         room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
-        new_player = await check_new_player(player, room_obj)
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
-            'is_new_player': new_player,
+            'is_new_player': True,
             'player': player
         }))

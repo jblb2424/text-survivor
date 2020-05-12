@@ -2,6 +2,7 @@ body
 {
   font-family: "Arial";
   font-weight: 300;
+  background-color: #EAE7DC;
 }
 
 .game-body {
@@ -12,8 +13,8 @@ body
     flex-direction: column;
     width: 40%;
     border-radius: 4px;
-    border-width: 2px;
-    border: 2px solid rgba(var(--sk_foreground_high, 29, 28, 29), 0.3);
+    border-width: 3px;
+    border: 3px solid #8E8D8A;
 
     #chat-log {
       cursor: default;
@@ -31,8 +32,7 @@ body
   #chat-message-input {
       background: rgba(var(--sk_primary_background,255,255,255),1);
       border-radius: 4px;
-      border-width: 2px;
-      border-color: rgba(var(--sk_foreground_high,29,28,29),.3);
+      border: 3px solid #8E8D8A;
       min-height: 26px;
       min-width: 1px;
       padding-left: 10px;
@@ -57,12 +57,36 @@ body
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    height: 100%;
 
-   .survivor-wrapper{
-      width: 160px;
+  .survivor-wrapper {
+    margin-bottom: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+   .vote-count {
+     margin-right: 22%;
+     margin-top: 2%;
+     color: #E85A4F;
+   }
+
+   .survivor-pill{
+      min-width: 160px;
+      padding-left: 8px;
+      box-sizing: border-box;
+      padding-right: 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      margin-right: 42px;
+      background-color: #d8c385;
+      border-radius: 5px;
+      padding-bottom: 12px;
+      box-shadow: 0 0 8px 0 rgba(0,0,0,.22);
+      &.voted-out {
+        box-shadow: 0 0 0 3px #E98074 inset;
+      }
    }
 
     .vote-button {
@@ -70,13 +94,16 @@ body
       border-radius: 5px;
       color: #1E1E1E;
       text-align: center;
-      background-color: rgba(222, 68, 68, .9);
+      background-color: #E85A4F;;
       cursor: pointer;
       width: 82px;
       &.disabled {
         opacity: 0.38;
         color: black;
         pointer-events: none;
+      }
+      &:hover {
+        box-shadow: 0 0 8px 0 gold;
       }
 
     }

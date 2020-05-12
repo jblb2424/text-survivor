@@ -11,14 +11,20 @@
     <div class='game-body'>
         <div class="chat-area">
         <textarea id="chat-log" cols="100" rows="35" readonly></textarea>
-        <input id="chat-message-input" type="text" size="100" placeholder="Send Message...">
+        <input id="chat-message-input" type="text" size="100" placeholder="Chat to Form Alliances...">
         </div>
         {{ room_name|json_script:"room-name" }}
         <div class='survivors-list'>
             {% for survivor in survivors %}
-                <div class='survivor-wrapper'>
-                    <div class='vote-selection survivor'> {{ survivor.name }} </div> 
-                    <div class='vote-button' data-survivor={{ survivor.name }}> Vote </div>
+                <div>
+                    <div class='survivor-wrapper {{ survivor.name }}'>
+                        <div class="survivor-pill {{ survivor.name }}">
+                            <div class='vote-selection survivor'> {{ survivor.name }} </div> 
+                            <div class='vote-button' data-survivor={{ survivor.name }}> Vote </div>
+                        </div>
+                        <span class='vote-count {{ survivor.name }}'> </span>
+                    </div>
+
                 </div>
             {% endfor %}
         </div>
