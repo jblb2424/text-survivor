@@ -84,9 +84,11 @@ window.initChat = (room, player, survivors) => {
         $('.vote-button').removeClass('disabled')
         $('.vote-button').removeClass('voted-out')
         survivor_names.forEach((s, index) => {
+          const survivorDiv = $(`.survivor-wrapper[data-survivor=${s}]`)
           var text = data[s] || 0
           var voteLabel = data[s] === 1 ? 'Vote' : 'Votes'
-          $(`.vote-count.${s}`).text(`${text} ${voteLabel}`)
+          // $(`.vote-count.${s}`).text(`${text} ${voteLabel}`)
+          $(survivorDiv).find('.vote-count').text(`${text} ${voteLabel}`)
         })
       }
     }
