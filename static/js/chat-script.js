@@ -31,6 +31,29 @@ window.initChat = (room, player, survivors) => {
     return whispered
   }
 
+  function renderMessageSelectDropdown(message) {
+    const regex = new RegExp(
+      message.replace(/[-[\]{}()*+?.,\\/^$|#\s]/g, "\\$&"),
+      "i"
+    );
+    var resultHTML = ''
+
+    const result = survivor_names.filter(name => regex.test(name))
+    const isLastOption = Object.keys(result).length == 1
+    if(isLastOption) {
+      $('.tab-select').show()
+    } 
+    else {
+      $('.tab-select').hide()
+    }
+    for (var key in result) {
+      const survivor = result[key]
+      const selected = isLastOption ? 'selected' : ''
+      resultHTML += `<div class='message-survivor-option ${selected}' data-survivor=${survivor}>${survivor}</div>`
+    }
+    $('.survivor-name-dropdown').html(resultHTML)
+  }
+
   function formatMessage(privateMessage, isOwnPrivateMessage , roomMessage, data) {
     if(privateMessage) {
       return '[ ' + data.player + ' whispers ]: ' 
@@ -57,7 +80,7 @@ window.initChat = (room, player, survivors) => {
       if(data.current_loser.includes(player)) {
         window.location.pathname = '/home/'
       } else {
-        $(`.survivor-wrapper.${data.current_loser}`).remove()
+        $(`.survivor-wrapper[data-survivor=${data.current_loser}]`).remove()
         $('.vote-button').removeClass('disabled')
         $('.vote-button').removeClass('voted-out')
         survivor_names.forEach((s, index) => {
@@ -71,8 +94,9 @@ window.initChat = (room, player, survivors) => {
     //Player has joined, create new element
     if(data.is_new_player && data.player != player && !survivor_names.includes(data.player)) {
       var survivorDiv = $('.survivor-wrapper').clone()[0]
-      $(survivorDiv).find('.vote-button').attr('data-survivor', data.player)
+      $(survivorDiv).attr('data-survivor', data.player)
       $(survivorDiv).find('.vote-selection').text(`${data.player}`)
+      $(survivorDiv).find('.vote-button').attr('data-survivor', data.player)
       $('.survivors-list').append(survivorDiv)
       if($('.survivor-wrapper').length >= 2) {
         $('.vote-button').removeClass('disabled')
@@ -84,18 +108,35 @@ window.initChat = (room, player, survivors) => {
     console.error('Chat socket closed unexpectedly');
   };
 
-  document.querySelector('#chat-message-input').focus();
-  document.querySelector('#chat-message-input').onkeyup = function(e) {
+  $('#chat-message-input').bind('keydown', e => {
+   const messageInputDom = document.querySelector('#chat-message-input');
+   if (e.which === 9) { //tab
+      e.preventDefault();
+      if($('.message-survivor-option.selected').length) {
+        messageInputDom.value = "/w " + $('.message-survivor-option.selected').attr('data-survivor')
+      }
+    }
+  })
+
+
+  $('#chat-message-input').bind('keyup', e => {
     const messageInputDom = document.querySelector('#chat-message-input');
     const message = messageInputDom.value;
     const whispered = parseInput(message)
+    if(message.includes('/w ')) {
+      const rawMessage = message.replace('/w ', '')
+      renderMessageSelectDropdown(rawMessage)
+      $('.dropdown-wrapper').show()
+    } else {
+      $('.dropdown-wrapper').hide()
+    }
     if(survivor_names.includes(whispered)) {
       receiver = whispered
       $('#chat-message-input').addClass('private-message')
       messageInputDom.value = ''
       messageInputDom.placeholder = `Whisper ${receiver}...`
     }
-    if (e.keyCode === 13) {  // enter, return 
+    if (e.which === 13) {  // enter, return 
       if(message != '') {
         chatSocket.send(JSON.stringify({
             'message': message,
@@ -108,17 +149,23 @@ window.initChat = (room, player, survivors) => {
       messageInputDom.placeholder = 'Chat to Form Alliances...'
       receiver = room
       $('#chat-message-input').removeClass('private-message')
-      }
-  };
+    }
+  });
 
-  $('.vote-button').click(e => {
+  $('.vote-button').live('click', e => {
     $('.vote-button').addClass('disabled');
     var selectedSurvivor = e.target.getAttribute('data-survivor')
-    $(`.survivor-pill.${selectedSurvivor}`).addClass('voted-out')
+    $(`.survivor-wrapper[data-survivor=${selectedSurvivor}]`).find('.survivor-pill').addClass('voted-out')
     chatSocket.send(JSON.stringify({
         'player': player,
         'votee' : e.target.getAttribute('data-survivor') ,
         'command': 'vote'
     }))});
+
+  $('.survivor-name-dropdown').click(e => {
+    const survivor = $(e.target).attr('data-survivor')
+    $('#chat-message-input').val(`/w ${survivor}`)
+    $('#chat-message-input').focus();
+  })
 
 }

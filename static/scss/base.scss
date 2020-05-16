@@ -1,12 +1,51 @@
 body
 {
   font-family: "Arial";
-  font-weight: 300;
+  font-weight: 600;
   background-color: #EAE7DC;
+}
+
+.you-are {
+  margin-left: 4px;
 }
 
 .game-body {
   display: flex;
+
+  .dropdown-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: fixed;
+    left: 585px;
+    bottom: 18px;
+    .tab-select {
+      text-align: center;
+      padding-bottom: 4px;
+      color: #E9807f;
+    }
+  }
+  .survivor-name-dropdown {
+    width: 200px;
+    background-color: #d8c385;
+    z-index: 900;
+    box-shadow: 1px 1px 5px 2px hsla(0,0%,47.5%,.21);
+    border-radius: 5px;
+    .message-survivor-option {
+      text-align: center;
+      cursor: pointer;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      &:hover {
+        background-color: rgba(255,227,48,0.21) 
+      }
+      &.selected {
+        background-color: rgba(255,227,48,0.21) 
+      }
+    }
+  }
 
   .chat-area {
     display: flex;
@@ -58,6 +97,7 @@ body
     flex-direction: row;
     flex-wrap: wrap;
     height: 100%;
+    margin-top: 4px;
 
   .survivor-wrapper {
     margin-bottom: 22px;
@@ -86,6 +126,7 @@ body
       box-shadow: 0 0 8px 0 rgba(0,0,0,.22);
       &.voted-out {
         box-shadow: 0 0 0 3px #E98074 inset;
+        border: none;
       }
    }
 

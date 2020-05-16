@@ -5,24 +5,32 @@
 {% endblock %}
 
 {% block content %}
-    <div>
-        <span> Player: </span>  <span> {{ player }} </span>
+    <div class='you-are'>
+        <span> You are: </span>  <span> {{ player }} </span>
     </div>
     <div class='game-body'>
         <div class="chat-area">
         <textarea id="chat-log" cols="100" rows="35" readonly></textarea>
         <input id="chat-message-input" type="text" size="100" placeholder="Chat to Form Alliances...">
         </div>
+        <div class='dropdown-wrapper' style="display:none">
+            <div class='tab-select'> Tab to Complete </div>
+            <div class='survivor-name-dropdown'> 
+                {% for survivor in survivors %}
+                    <div class='message-survivor-option' data-survivor={{ survivor.name }}> {{ survivor.name }} </div>
+                {% endfor %}
+            </div>
+        </div>
         {{ room_name|json_script:"room-name" }}
         <div class='survivors-list'>
             {% for survivor in survivors %}
                 <div>
-                    <div class='survivor-wrapper {{ survivor.name }}'>
-                        <div class="survivor-pill {{ survivor.name }}">
+                    <div class='survivor-wrapper' data-survivor={{ survivor.name }}>
+                        <div class="survivor-pill">
                             <div class='vote-selection survivor'> {{ survivor.name }} </div> 
                             <div class='vote-button' data-survivor={{ survivor.name }}> Vote </div>
                         </div>
-                        <span class='vote-count {{ survivor.name }}'> </span>
+                        <span class='vote-count'> </span>
                     </div>
 
                 </div>
