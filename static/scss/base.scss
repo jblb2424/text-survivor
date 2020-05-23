@@ -128,6 +128,9 @@ body
         box-shadow: 0 0 0 3px #E98074 inset;
         border: none;
       }
+      &.winner {
+        border: 3px solid #67D770;
+      }
    }
 
     .vote-button {

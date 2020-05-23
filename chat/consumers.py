@@ -43,60 +43,55 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data, dispatch_uid='receive_json'):
         text_data_json = json.loads(text_data)
         command = text_data_json.get('command')
-        player_name = text_data_json.get('player')
-
-        #Message Props
-        receiver = text_data_json.get('receiver') or self.room_name
-        message = text_data_json.get('message')
-
-        #Vote Props
-        votee = text_data_json.get('votee')
-
-        # Send message to room group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': command,
-                'message': message,
-                'receiver': receiver,
-                'player': player_name,
-
-                'votee': votee
-            }
-        )
+        if command == 'vote':
+            await self.vote(text_data_json)
+        if command == 'chat_message':
+            await self.chat_message(text_data_json)
+        if command == 'add_player':
+            await self.add_player(text_data_json)
 
 
-    #### possible responses to receiving info from websocket ####
+
     async def vote(self, event):
-        print(event)
         voter = event['player']
         votee = event['votee']
         room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
-
         await save_vote(event, room_obj)
 
         #aggregate vote information
         results  = await aggregate_votes(room_obj)
-        await self.send(text_data=json.dumps(results))
+        await self.channel_layer.group_send(
+                self.room_group_name,
+                results
+        )
 
 
-    # Receive message from room group
     async def chat_message(self, event):
-        message = event['message']
+        receiver = event['receiver'] or self.room_name
         await save_message(event)
-        # Send message to WebSocket
-        await self.send(text_data=json.dumps({
-            'message': message,
-            'receiver': event['receiver'],
-            'player': event['player']
-        }))
+        message_package = {
+            'message': event['message'],
+            'receiver': receiver,
+            'player': event['player'],
+            'type': 'broadcast'
+        }
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            message_package
+        )
 
 
     async def add_player(self, event):
-        player = event['player']
-        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
-        # Send message to WebSocket
-        await self.send(text_data=json.dumps({
+        new_player_package = {
             'is_new_player': True,
-            'player': player
-        }))
+            'player': event['player'],
+            'type': 'broadcast'
+        }
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            new_player_package
+        )
+
+
+    async def broadcast(self, event):
+         await self.send(text_data=json.dumps(event))

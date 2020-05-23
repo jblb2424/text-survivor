@@ -22,6 +22,33 @@ window.initChat = (room, player, survivors) => {
       'command': 'add_player'
     }))}
 
+
+
+  function youAreThirdPlaceRender(data) {
+    survivor_names.forEach(survivor => {
+      const survivorDiv = $(`.survivor-wrapper[data-survivor=${survivor}]`)
+      if(data.current_losers.includes(survivor)) {
+        survivorDiv.find('.survivor-pill').addClass('voted-out')
+        $(survivorDiv).find('.vote-count').text('Voting...')
+      } else {
+        survivorDiv.find('.vote-button').removeClass('disabled')
+      }
+    })
+  }
+
+
+  function youAreInFinalRoundRender(data) {
+     survivor_names.forEach(survivor => {
+      const survivorDiv = $(`.survivor-wrapper[data-survivor=${survivor}]`)
+      if(data.current_losers.includes(survivor)) {
+        survivorDiv.find('.survivor-pill').addClass('voted-out')
+        $(survivorDiv).find('.vote-count').text('Voting...')
+      }
+    })
+  }
+
+
+
   function parseInput(message) {
     const regex = new RegExp('/w[ ][A-Za-z_]* ')
 
@@ -54,6 +81,7 @@ window.initChat = (room, player, survivors) => {
     $('.survivor-name-dropdown').html(resultHTML)
   }
 
+
   function formatMessage(privateMessage, isOwnPrivateMessage , roomMessage, data) {
     if(privateMessage) {
       return '[ ' + data.player + ' whispers ]: ' 
@@ -77,12 +105,14 @@ window.initChat = (room, player, survivors) => {
 
     //kick loser(s) if round over
     if(data.round_over === true) {
-      if(data.current_loser.includes(player)) {
+      if(data.current_losers.includes(player)) {
         window.location.pathname = '/home/'
       } else {
-        $(`.survivor-wrapper[data-survivor=${data.current_loser}]`).remove()
+        data.current_losers.forEach(loser => { //remove all losers
+          $(`.survivor-wrapper[data-survivor=${loser}]`).remove()
+        })
         $('.vote-button').removeClass('disabled')
-        $('.vote-button').removeClass('voted-out')
+        $('.survivor-pill').removeClass('voted-out')
         survivor_names.forEach((s, index) => {
           const survivorDiv = $(`.survivor-wrapper[data-survivor=${s}]`)
           var text = data[s] || 0
@@ -93,6 +123,27 @@ window.initChat = (room, player, survivors) => {
       }
     }
 
+    //Generate final round state.
+    if(data.final_round === true) {
+      $('.survivor-pill').removeClass('voted-out')
+      if(data.current_losers.includes(player)) {
+        youAreThirdPlaceRender(data)
+      } else {
+        youAreInFinalRoundRender(data)
+      }
+    }
+
+    if(data.game_over === true) {
+      const winner = survivor_names.filter(x => !data.current_losers.includes(x))[0]
+      const winnerDiv = $(`.survivor-wrapper[data-survivor=${winner}]`)
+      $(winnerDiv).addClass('winner')
+      if(winner === player) {
+        $(winnerDiv).find('vote-count').text('You Won!')
+      } else {
+         $(winnerDiv).find('vote-count').text('Winner!')
+      }
+    }
+
     //Player has joined, create new element
     if(data.is_new_player && data.player != player && !survivor_names.includes(data.player)) {
       var survivorDiv = $('.survivor-wrapper').clone()[0]
@@ -100,7 +151,8 @@ window.initChat = (room, player, survivors) => {
       $(survivorDiv).find('.vote-selection').text(`${data.player}`)
       $(survivorDiv).find('.vote-button').attr('data-survivor', data.player)
       $('.survivors-list').append(survivorDiv)
-      if($('.survivor-wrapper').length >= 2) {
+      survivor_names.push(data.player)
+      if(survivor_names.length >= 2) {
         $('.vote-button').removeClass('disabled')
       }
     }
