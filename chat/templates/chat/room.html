@@ -3,15 +3,63 @@
 {% block bundle %}
     {% render_bundle 'chat' %}
 {% endblock %}
-
+<!-- {% load static %} -->
 {% block content %}
-    <div class='you-are'>
-        <span> You are: </span>  <span> {{ player }} </span>
+
+<!-- Figure out how to get modals in own file -->
+<div class='modal-wrapper' id='select-player-modal'>
+    <div class='select-player-modal game-modal'> 
+        <div class='modal-header'> 
+            <span> Select Player </span>
+            <i class="fas fa-times close-modal"></i>
+        </div>
+        <div class='modal-body'>
+            <input class='game-input action-item-input' placeholder='Select Player...'> </input>
+            <div class='control-button accept-action-item'> Accept </div>
+        </div>
+    </div>
+</div>
+
+<div class='modal-wrapper' id='game-over-modal'>
+    <div class='game-over-modal game-modal'> 
+        <div class='modal-header'> 
+            <span> Game Over</span>
+        </div>
+        <div class='modal-body'>
+            <span class='winner-text'> </span> 
+        </div>
+    </div>
+</div>
+
+
+    <head> <script src="https://kit.fontawesome.com/2ce8473957.js" crossorigin="anonymous"></script> </head>
+    <div class='top-row'>
+        <div class='you-are'>
+            <span class='you-are-label'> You are: {{ player }} </span>
+            <div class='coin-info'> <div class='coin-label'> Coins: </div> 
+            <div class='coin-count player-coin-count'> 5 </div>
+                <img src='{% static 'coin.png' %}' class='coin-img'></img>
+            </div>
+            <div><span class='victory-points'> Victory Points: </span> <span class='point-count'> 0 </span></div>
+        </div>
+        <div class='bank you-are'>
+            <img src='{% static 'bank.png' %}' class='bank-img'></img>
+            <div class='bank-count-wrapper coin-info'>
+                 <div class='coin-count bank-coin-count'> 
+                    0 
+                 </div>
+                    <img src='{% static 'coin.png' %}' class='coin-img'></img>
+            </div>               
+        </div>
+        <div class='round-wrapper'>
+            <span class='round'> 1 </span>
+            <span class='round-label'> Round </span>
+        </div>
     </div>
     <div class='game-body'>
         <div class="chat-area">
-        <textarea id="chat-log" cols="100" rows="35" readonly></textarea>
-        <input id="chat-message-input" type="text" size="100" placeholder="Chat to Form Alliances...">
+        <textarea id="chat-log" cols="100" rows="30" readonly></textarea>
+        <input id="chat-message-input" type="text" size="100" placeholder="Chat to Form Alliances... /w to private message">
         </div>
         <div class='dropdown-wrapper' style="display:none">
             <div class='tab-select'> Tab to Complete </div>
@@ -22,22 +70,141 @@
             </div>
         </div>
         {{ room_name|json_script:"room-name" }}
-        <div class='survivors-list'>
-            {% for survivor in survivors %}
-                <div>
-                    <div class='survivor-wrapper' data-survivor={{ survivor.name }}>
-                        <div class="survivor-pill">
-                            <div class='vote-selection survivor'> {{ survivor.name }} </div> 
-                            <div class='vote-button' data-survivor={{ survivor.name }}> Vote </div>
+        <div class='right-panel'>
+            <div class='mid-row'>
+                <div class = 'game-play-content'>
+ <!--                    <div class='survivor-header control-header'> Survivors </div> -->
+                    <div class='survivors-list'>
+                        {% for survivor in survivors %}
+                            {% if survivor.name == player %}
+                                <div class='survivor-wrapper' data-survivor={{ survivor.name }}>
+                                    <div class="survivor-pill">
+                                        <div class='vote-selection survivor'> {{ survivor.name }} </div> 
+                                        <div class='bounty-for-player'> 
+                                            <span> ( Bounty: </span> 
+                                            <span class='bounty-amount'> 0 </span>
+                                            <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                                            <span> ) </span>
+                                        </div>
+                                        <div class='vote-button your-button' data-survivor={{ survivor.name }}>
+                                            <span class='immunity-label'> Immunity </span>
+                                            <div class='coin-info'>
+                                                <div class='immunity-price'> 5 </div>
+                                                <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class='vote-count'> </span>
+                                </div>
+                            {% else %}
+                                <div class='survivor-wrapper' data-survivor={{ survivor.name }}>
+                                    <div class="survivor-pill">
+                                        <div class='vote-selection survivor'> {{ survivor.name }} </div> 
+                                        <div class='bounty-for-player'> 
+                                            <span> ( Bounty: </span> 
+                                            <span class='bounty-amount'> 0 </span>
+                                            <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                                            <span> ) </span>
+                                        </div>
+                                        <div class='vote-button' data-survivor={{ survivor.name }}> Vote </div>
+                                    </div>
+                                    <span class='vote-count'> </span>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class='leaderboard-wrapper'>
+                    <div class='leaderboard-header control-header'> Leaderboard </div>
+                    <div class='leaderboard'> 
+                        {% for survivor in survivors %}
+                            <div class='score-row'> 
+                                <span class='leaderboard-name'> {{ survivor.name }} </span> <span class='point-count leaderboard-point' data-survivor={{ survivor.name }}> 0 </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class = 'action-dashboard'> 
+                <div class='action'>
+                    <div class='action-label'> Donate </div>
+                    <div class='action-wrapper'>
+                        <div class='coin-amount-label'>
+                            <input class='trade-input game-input' minlength="1" maxlength="3" type='number'> </input> <img src='{% static 'coin.png' %}' class='coin-img'></img>
                         </div>
-                        <span class='vote-count'> </span>
+                        <input class='player-trade-input game-input' placeholder='Player to trade...'> </input>
+                        <div class='action-accept accept-trade disabled'> Send </div>
+                    </div>
+                </div>
+
+               <div class='action'>
+                    <div class='action-label'> Intel </div>
+                    <div class='action-wrapper intel-items'>
+
+                        <div class='intel-card'>
+                            <div class='coin-info'>
+                                <div class='coin-count'> {{ see_messages_price}} </div>
+                                <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                            </div>
+                            <div class='message-card wrapper' data-card-price='see_messages_price'>
+                                <i class="far fa-comments intel-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class='intel-card'> 
+                            <div class='coin-info'>
+                                <div class='coin-count'> {{ voted_for_you_price }} </div>
+                                <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                            </div>
+                            <div class='vote-card wrapper' data-card-price='voted_for_you_price'>
+                                <i class="fas fa-user-times intel-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class='intel-card'>
+                            <div class='coin-info'>
+                                <div class='coin-count'> {{ anonymous_price }} </div>
+                                <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                            </div>
+                            <div class='anonymous-card wrapper' data-card-price='anonymous_price'>
+                                <i class="fas fa-question"></i>
+                            </div>
+                        </div>
+
+                      <div class='intel-card'> 
+                        <div class='coin-info'>
+                            <div class='coin-count'> {{ player_vote_price }} </div>
+                                <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                        </div>
+                      <div class='vote-from-player-card wrapper' data-card-price='player_vote_price'>
+                            <i class="fas fa-poll intel-icon"></i>
+                        </div>
                     </div>
 
                 </div>
-            {% endfor %}
+                </div>
+                <div class='action'>
+                    <div class='action-label'> Bounty </div>
+                    <div class='action-wrapper'>
+                        <div class='coin-amount-label'>
+                            <input class='bounty-input game-input' minlength="1" maxlength="3" min='0' type='number'> </input> <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                        </div>
+                        <input class='player-bounty-input game-input' placeholder='Player for bounty...'> </input>
+                        <div class='action-accept disabled bounty-set'> Set </div>
+
+                    </div>
+                </div>
         </div>
     </div>
 {% endblock %}
 {% block extra_js %}
-    window.initChat('{{ room_name }}', '{{ player }}', {{survivors|safe}});
+window.initChat(
+    '{{ room_name }}', 
+    '{{ player }}', 
+    {{survivors|safe}},
+    '{{ anonymous_price }}',
+    '{{ voted_for_you_price }}', 
+    '{{ player_vote_price }}', 
+    '{{ see_messages_price }}',
+);
 {% endblock %}

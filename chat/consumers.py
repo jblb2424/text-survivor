@@ -10,7 +10,7 @@ from asgiref.sync import sync_to_async
 import asyncio
 
 
-from .syncronous_requests import format_votes,save_message, save_vote, remove_player, handle_timeup, aggregate_votes
+from .syncronous_requests import format_votes,save_message, save_vote, remove_player, handle_timeup, aggregate_votes, trade, set_bounty, get_messages, see_votes, see_votes_from_player, activate_immunity, charge_player_for_message
     
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -49,6 +49,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.chat_message(text_data_json)
         if command == 'add_player':
             await self.add_player(text_data_json)
+        if command == 'trade':
+            await self.trade(text_data_json)
+        if command == 'bounty':
+            await self.bounty(text_data_json)
+        if command == 'message_card':
+            await self.message_card(text_data_json)
+        if command == 'see_votes':
+            await self.see_votes(text_data_json)
+        if command == 'see_votes_from_player':
+            await self.see_votes_from_player(text_data_json)
+        if command == 'activate_immunity':
+            await self.activate_immunity(text_data_json)
 
 
 
@@ -59,29 +71,43 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await save_vote(event, room_obj)
 
         #aggregate vote information
-        results  = await aggregate_votes(room_obj)
+        results  = await aggregate_votes(room_obj, voter)
         await self.channel_layer.group_send(
                 self.room_group_name,
                 results
         )
 
 
+
     async def chat_message(self, event):
-        receiver = event['receiver'] or self.room_name
-        await save_message(event)
+        receiver = event.get('receiver') or self.room_name
+        if event.get('is_redacted'):
+            player = 'REDACTED'
+        else:
+            player = event['player']
+        
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        await charge_player_for_message(event['player'], room_obj)
+        await save_message(event, self.room_name)
+
+        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
         message_package = {
             'message': event['message'],
             'receiver': receiver,
-            'player': event['player'],
+            'player': player,
             'type': 'broadcast'
         }
+        await self.update_bank()
+        await sync_to_async(message_package.update)({'coins': player_obj.coins})
         await self.channel_layer.group_send(
             self.room_group_name,
             message_package
         )
 
 
+
     async def add_player(self, event):
+        self.player_name = event['player']
         new_player_package = {
             'is_new_player': True,
             'player': event['player'],
@@ -92,6 +118,108 @@ class ChatConsumer(AsyncWebsocketConsumer):
             new_player_package
         )
 
+    async def trade(self, event):
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        executed_trade = await trade(room_obj, event['trader'], event['tradee'], event['coins'])
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            executed_trade
+        )
 
+    async def update_bank(self):
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        await self.channel_layer.group_send(
+            self.room_group_name, 
+            {
+            'type': 'broadcast',
+            'bank_coins': room_obj.bank
+            }
+        )
+
+    async def message_card(self, event):
+        target_player = event['target_player']
+        player = event['player']
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        packet = await get_messages(target_player, room_obj)
+        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+        await self.update_bank()
+        await sync_to_async(packet.update)({'coins': player_obj.coins})
+        await self.send(text_data=json.dumps(packet))
+
+    async def activate_immunity(self, event):
+        player = event['player']
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        await activate_immunity(player, room_obj)
+        await self.send(text_data=json.dumps({'immunity_activated': True}))
+        await self.broadcast({
+            'player': 'ANNOUNCEMENT',
+            'message': player + ' voted.',
+            'receiver': self.room_name
+        })
+
+    async def see_votes(self, event):
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        player = event['player']
+        packet = await see_votes(player, room_obj)
+        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+        await self.update_bank()
+        await sync_to_async(packet.update)({'coins': player_obj.coins})
+        await self.send(text_data=json.dumps(packet))
+
+    async def see_votes_from_player(self, event):
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        target_player = event['target_player']
+        packet = await see_votes_from_player(target_player, room_obj, event['player'])
+        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+        await self.update_bank()
+        await sync_to_async(packet.update)({'coins': player_obj.coins})
+        await self.send(text_data=json.dumps(packet))
+
+    async def bounty(self, event):
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        setter = event['setter']
+        set_for = event['set_for']
+        bounty_amount = event['bounty_amount']
+        bounty_resp = await set_bounty(set_for, bounty_amount, setter)
+        await sync_to_async(bounty_resp.update)({'type': 'broadcast'})
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            bounty_resp
+        )
+
+        if(self.player_name == event['setter']):
+            player = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+            await self.send(text_data=json.dumps({'coins': player.coins}))
+
+    #### Receive methods for data response back to player ####
     async def broadcast(self, event):
          await self.send(text_data=json.dumps(event))
+
+
+    async def receive_vote(self, event):
+        packet = event
+        player = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+        await self.update_bank()
+        await sync_to_async(packet.update)({'coins': player.coins, 'points': player.points})
+        await self.send(text_data=json.dumps(packet))
+
+
+    async def receive_trade(self, event):
+        executed_trade = event
+        if(self.player_name == event['trader_name']):
+            await self.send(text_data=json.dumps({
+             'coins': executed_trade['trader'],
+             'trade': True,
+             'player': 'Trade',
+             'message': 'You gave ' + str(event['trade_amount']) + ' coins to ' + event['tradee_name'],
+             'receiver': self.room_name
+             }
+            ))
+        if(self.player_name == event['tradee_name']):
+            await self.send(text_data=json.dumps({
+                'coins': executed_trade['tradee'], 
+                'trade': True,
+                'player': 'Trade',
+                'message': 'You received ' + str(event['trade_amount']) + ' coins from ' +  event['tradee_name'],
+                'receiver': self.room_name       
+                }))

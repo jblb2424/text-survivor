@@ -6,12 +6,14 @@
 {% endblock %}
 
 {% block content %}
-
-    Welcome to Text Survivor<br>
-        <div> Username </div>
-        <input id="username-input" minlength="4" maxlength="10"> </input>
-        <br/>
-        <br/>
-        <button id="play"> Play </button>
+	<div class='enter-game-wrapper'>
+	    <h1 class='title-label'> Chat Island </h1>
+	    <div class='enter-controls'>
+	        <div class='enter-game-toggle'>
+	        	<button id="create-game-public" class='control-button'> Create Public Island </button>
+	        	<button id="create-game-private" class='control-button'> Create Private Island </button>
+	        	<button id="play" class='control-button'> Join a Random Public Island </button>
+	    	</div>
+	    </div>
     </div>
 {% endblock %}

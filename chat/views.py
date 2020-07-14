@@ -19,28 +19,51 @@ from rest_framework.generics import (
     DestroyAPIView,
     UpdateAPIView
 )
+from django.shortcuts import redirect
 
+def view_404(request, exception=None):
+    return redirect('/home/')
 
 def index(request):
-	print(request.session.get('player'))
 	request.session.clear()
 	return render(request, 'chat/index.html')
 
 
+#Tries to find an availible room, and will create a public room if it can't find any
 def load_room(request):
-	available_rooms = Room.objects.filter(player_count__lte = 5)
+	available_rooms = Room.objects.filter(player_count__lt = 6, public=True, game_over=False)
 
 	if len(available_rooms) > 0:
 		room = available_rooms[random.randint(0, len(available_rooms) -1 )].name
 	else:
 		room = get_random_string(length = 5)
+	
+	new_room = Room.objects.get_or_create(name=room)[0]
+	return JsonResponse({'room_id': room})
 
+
+def create_public_room(request):
+	room = get_random_string(length = 5)
+	new_room = Room.objects.create(name=room)
+	return JsonResponse({'room_id': room})
+
+def create_private_room(request):
+	room = get_random_string(length = 5)
+	new_room = Room.objects.create(name=room, public=False)
 	return JsonResponse({'room_id': room})
 
 def room(request, room_name):
-	#### Check if room exists. If not, create it with new player ####
-	new_room = Room.objects.get_or_create(name=room_name)[0]
-	if new_room.player_count > 10:
+	anonymous_price = random.randint(1, 2)
+	player_vote_price = random.randint(3, 7)
+	voted_for_you_price = random.randint(3, 7)
+	see_messages_price = random.randint(5, 9)
+
+	room_exists = Room.objects.filter(name=room_name, game_over=False).exists()
+	if not room_exists:
+		return redirect('/home/')
+
+	room = Room.objects.get(name=room_name)
+	if room.player_count >= 6:
 		return redirect('/home/')
 	
 	if request.session.get('player'):
@@ -50,18 +73,35 @@ def room(request, room_name):
 		word1 = rw.random_word()
 		word2 = rw.random_word()
 		unique_name_word = word1 + "_" + word2
-		new_player = Player.objects.create(name=unique_name_word, room=new_room)
+		while len(unique_name_word) > 18:
+			word1 = rw.random_word()
+			word2 = rw.random_word()
+			unique_name_word = word1 + "_" + word2
+
+
+		new_player = Player.objects.create(name=unique_name_word, room=room)
+		new_player.anonymous_price = anonymous_price
+		new_player.voted_for_you_price = voted_for_you_price
+		new_player.player_vote_price = player_vote_price
+		new_player.see_messages_price = see_messages_price
+		new_player.save()
+
 		request.session['player'] = unique_name_word
-		new_room.player_count +=1
-		new_room.save()
+		room.player_count +=1
+		room.save()
 		current_player = unique_name_word
 
-	survivors = Player.objects.filter(room=new_room)
+	survivors = Player.objects.filter(room=room)
 	survivor_list = [{'name': survivor.name} for survivor in survivors]
+	player = Player.objects.get(name = current_player)
 	return render(request, 'chat/room.html', {
 		'room_name': room_name,
 		'player': current_player,
-		'survivors': survivor_list
+		'survivors': survivor_list,
+		'anonymous_price': player.anonymous_price,
+		'voted_for_you_price': player.voted_for_you_price,
+		'player_vote_price': player.player_vote_price,
+		'see_messages_price': player.see_messages_price
 	})
 
 #Fix this

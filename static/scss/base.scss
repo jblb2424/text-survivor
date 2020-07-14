@@ -3,10 +3,199 @@ body
   font-family: "Arial";
   font-weight: 600;
   background-color: #EAE7DC;
+  line-height: 24px;
+  letter-spacing: .3px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.enter-game-wrapper {
+  width: 25%;
+  height: 25%;
+  position: absolute;
+  left: 50%;
+  bottom: 40%;
+  transform: translate(-50%, -50%);
+}
+
+.title-label {
+  text-align: center;  
+}
+
+.enter-controls {
+  background-color: rgba(142, 141, 138, 0.2);
+  padding: 18px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-button {
+  border: 3px solid;
+  border-radius: 5px;
+  color: #1E1E1E;
+  text-align: center;
+  background-color: #E98074;
+  cursor: pointer;
+  width: 100px;
+  font-weight: 700;
+  padding: 4px;
+  margin-right: 8px;
+  margin-left: 8px;
+}
+
+.enter-game-toggle {
+  display: flex;
+  justify-content: space-between;
+}
+
+.top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.round-wrapper {
+  background-color: #f8f8f8;
+  border: 4px solid #8E8D8A;
+  padding: 16px;
+  border-radius: 50%;
+  flex-direction: column;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 2%;
+  padding-left: 24px;
+  padding-right: 24px;
+  .round {
+    font-size: 38px;
+    color: #E85A4F;
+  }
+  .round-label {
+    font-size: 11px;
+  }
 }
 
 .you-are {
-  margin-left: 4px;
+  display: flex;
+  flex-direction: column;
+  width: 18%;
+  margin-top: 20px;
+  padding: 8px;
+  background-color: #f8f8f8;
+  border-radius: 12px;
+  border: 4px solid #8E8D8A;
+}
+
+
+.bank {
+  margin-left: 8.1%;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  margin-top: 0px;
+  width: 6%;
+  height: 68px;
+  padding-bottom: 12px;
+  margin-top: 20px;
+  .bank-img {
+    width: 90px;
+    height: 56px;
+    pointer-events: none;
+  }
+}
+
+.you-are-label {
+  padding-right: 4px;
+  white-space: nowrap;
+}
+
+.coin-label {
+  margin-right: 4px;
+}
+
+.coin-img {
+  width: 17px;
+  height: 15px;
+  margin-bottom: 1px;
+  pointer-events: none;
+}
+
+.coin-info {
+  display: flex; 
+  align-items: center;
+}
+.coin-count {
+  font-size: 18px;
+  color: #E85A4F;
+}
+
+.game-input {
+  border-radius: 4px;
+  border: 4px solid #8E8D8A;
+  font-size: 15px;
+  background-color: #f5f5f5;
+  outline: 0;
+  width: 75%;
+}
+
+
+.modal-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: rgba(109,110,112,.3);
+  height: 100%;
+  width: 100%;
+  z-index: 1000;
+  .game-modal {
+    width: 350px;
+    height: 200px;
+    background-color: white;
+    box-shadow: 0 2px 3px 0 rgba(0,0,0,.5);
+    position: absolute;
+    top: 250px;
+    left: 450px;
+    z-index: 999;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .modal-header {
+    background-color: rgba(142, 141, 138, 0.2);
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    .close-modal {
+      cursor: pointer;
+      margin-left: 62%;
+    }
+  }
+
+  .modal-body{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: space-around;
+  }
 }
 
 .game-body {
@@ -17,8 +206,10 @@ body
     flex-direction: column;
     justify-content: flex-end;
     position: fixed;
-    left: 585px;
-    bottom: 18px;
+    margin-left: 18.8%;
+    width: 16%;
+    bottom: 6.4%;
+    z-index: 999;
     .tab-select {
       text-align: center;
       padding-bottom: 4px;
@@ -26,8 +217,7 @@ body
     }
   }
   .survivor-name-dropdown {
-    width: 200px;
-    background-color: #d8c385;
+    background-color: rgba(142, 141, 138, .1);
     z-index: 900;
     box-shadow: 1px 1px 5px 2px hsla(0,0%,47.5%,.21);
     border-radius: 5px;
@@ -47,31 +237,161 @@ body
     }
   }
 
+  .control-header {
+    text-align: center;
+    font-size: 20px;
+  }
+
   .chat-area {
     display: flex;
     flex-direction: column;
-    width: 40%;
+    width: 35%;
     border-radius: 4px;
     border-width: 3px;
-    border: 3px solid #8E8D8A;
+    border: 4px solid #8E8D8A;
+    margin-top: .5%;
 
     #chat-log {
       cursor: default;
       resize: none;
       border: none;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 300;
       outline: none;
       line-height: 20px;
       padding-left: 4px;
       background-color: #f8f8f8;
+      -ms-overflow-style: none;  /* Internet Explorer 10+ */
+      scrollbar-width: none;  /* Firefox */
+      &::-webkit-scrollbar { 
+          display: none;  /* Safari and Chrome */
+      }
+    }
+  }
+
+  .action-dashboard {
+    width: 50%;
+    position: absolute;
+    bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    .action-wrapper {
+      background-color: rgba(142, 141, 138, 0.2);
+      border-radius: 12px;
+      width: 100%;
+      height: 162px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      &.intel-items {
+        display: flex;
+        justify-content: center;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        .intel-card {
+          margin: 16px;
+          margin-top: 4px;
+          height: 40%;
+          width: 20%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          .wrapper {
+            background-color: white;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            border: 3px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            &:hover {
+              background-color: rgba(255,227,48,0.21);
+            }
+            &.disabled {
+              opacity: 0.38;
+              color: black;
+              pointer-events: none;
+            }
+          }
+      }
+      .intel-icon {
+        font-size: 20px;
+      }
+    }
+
+      .coin-amount-label {
+        display: flex;
+        justify-content: center;
+        margin-top: 16px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .trade-input, .bounty-input {
+        padding: 4px;
+        width: 32px;
+        margin-right: 4px;
+        font-weight: 700;
+
+      }
+      .action-accept {
+        border: 3px solid;
+        border-radius: 5px;
+        color: #1E1E1E;
+        text-align: center;
+        background-color: #E98074;
+        cursor: pointer;
+        width: 100px;
+        padding: 4px;
+        &.bounty-set {
+          background-color: #E85A4F;
+        }
+        &:hover {
+          box-shadow: 0 0 8px 0 gold;
+        }
+        &.disabled {
+          opacity: 0.38;
+          color: black;
+          pointer-events: none;
+        }
+      }
+
+      .player-trade-input {
+        margin-bottom: 16px;
+        padding: 4px;
+      }
+      .player-bounty-input {
+        margin-bottom: 16px;
+        padding: 4px;
+      }
+    }
+    .action {
+      width: 28%;
+      display: flex; 
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 4px;
+      .action-label {
+        text-align: center;
+        margin-bottom: 8px;
+        font-size: 20px;
+        padding: 8px;
+        width: 52%;
+        background-color: #d8c385;
+        border-radius: 5px;
+        box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.22);
+      }
     }
   }
 
   #chat-message-input {
       background: rgba(var(--sk_primary_background,255,255,255),1);
       border-radius: 4px;
-      border: 3px solid #8E8D8A;
+      border: 4px solid #8E8D8A;
       min-height: 26px;
       min-width: 1px;
       padding-left: 10px;
@@ -88,32 +408,100 @@ body
       background-color: #f5f5f5;
       &.private-message {
       background-color: #EBE0EF
+      } 
+      &.redacted {
+        background-color: #DAF0DC;
       }
     }
 
-  .survivors-list {
+  .right-panel {
+    width: 100%;
     margin-left: 4%;
+    .mid-row {
+      display: flex;
+    }
+    .game-play-content {
+      width: 53.5%
+    }
+    .leaderboard-wrapper {
+      margin-left: 5%;
+      width: 23.5%;
+      padding: 12px;
+      padding-top: 0px;
+      .leaderboard {
+        height: 63%;
+        display:flex;
+        align-items: center;
+        justify-content: center;
+        .score-row {
+          width: 85%;
+          padding-left: 12px;
+          margin-bottom: 6px;
+          margin-top: 6px;
+          font-size: 13px;
+          display: flex;
+          justify-content: space-between;
+          background-color: #d8c385;
+          border-radius: 5px;
+          padding: 4px;
+          box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.22);
+          .leaderboard-point {
+            color: #E85A4F;
+            font-size: 16px;
+          }
+        }
+      }
+    }
+
+    .leaderboard {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      margin-top: 4px;
+      background-color: rgba(142, 141, 138, 0.2);
+      padding: 8px;
+      border-radius: 12px;
+    }
+  }
+
+  .survivors-list {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    height: 100%;
     margin-top: 4px;
+    background-color: rgba(142,141,138,.2);
+    padding: 18px;
+    padding-right: 0px;
+    padding-left: 36px;
+    border-radius: 12px;
+    position: relative;
+    justify-content: space-around;
 
   .survivor-wrapper {
-    margin-bottom: 22px;
+    margin-bottom: 2%;
+    margin-top: 2%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 47%;
   }
    .vote-count {
      margin-right: 22%;
-     margin-top: 2%;
-     color: #E85A4F;
+     color: #1F7B27;
+     background-color: #d8c385;
+     border-radius: 5px;
+     padding-left: 8px;
+     margin-top: 6px;
+     padding-right: 8px;
+     box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.22);
+     &.loser {
+      color: #E85A4F;
+     }
    }
 
    .survivor-pill{
-      min-width: 160px;
       padding-left: 8px;
+      width: 80%;
       box-sizing: border-box;
       padding-right: 8px;
       display: flex;
@@ -124,23 +512,45 @@ body
       border-radius: 5px;
       padding-bottom: 12px;
       box-shadow: 0 0 8px 0 rgba(0,0,0,.22);
+      .bounty-for-player {
+        display: flex;
+        margin-left: 4px;
+      }
+      .bounty-amount {
+        margin-left: 4px;
+        color: #E85A4F;
+      }
+      .coin-img {
+        margin-top: 2px;
+      }
       &.voted-out {
-        box-shadow: 0 0 0 3px #E98074 inset;
+        box-shadow: 0 0 8px 0 rgba(233, 128, 116, 1);
         border: none;
+        background-color: rgba(233, 128, 116, .38);
       }
       &.winner {
-        border: 3px solid #67D770;
+        border: 4px solid #67D770;
       }
    }
 
     .vote-button {
-      border: 1px solid;
+      box-shadow: 0 0 8px 0 rgba(0,0,0,.22);
       border-radius: 5px;
       color: #1E1E1E;
       text-align: center;
-      background-color: #E85A4F;;
+      background-color: #E85A4F;
       cursor: pointer;
       width: 82px;
+      &.your-button {
+        background-color: #E98074;
+        width: 130px;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        .immunity-label{
+          margin-right: 4px;
+        }
+      }
       &.disabled {
         opacity: 0.38;
         color: black;
@@ -154,7 +564,7 @@ body
     .vote-selection {
       margin: 8px 0px;
       text-align: center;
-
+      font-size: 1vw;
     }
   }
 }

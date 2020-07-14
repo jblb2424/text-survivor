@@ -1,14 +1,84 @@
-window.initChat = (room, player, survivors) => {
-  var receiver = room
-  var survivor_names = []
-  for (var key in survivors) {
-    survivor_names.push(survivors[key].name)
+window.initChat = (
+  room, 
+  player, 
+  survivors,
+  anonymous_price,
+  voted_for_you_price,
+  player_vote_price,
+  see_messages_price,
+  ) => {
+  var state = {
+    message_receiver: room,
+    survivor_names: [],
+    current_losers: [],
+    isThirdPlace: false,
+    isFinalRound: false,
+    coins: 5,
+    bounties: {},
+    points: 0,
+    round: 1,
+    bankCoins: 0,
+    anonymous_price : anonymous_price,
+    voted_for_you_price: voted_for_you_price,
+    player_vote_price: player_vote_price,
+    see_messages_price: see_messages_price,
+    leaderboard: {}
   }
-  if (survivors.length < 2) {
+
+//DOM Elements
+const acceptTradeDOM = $('.accept-trade')
+const coinCountDOM = $('.player-coin-count')
+const tradeCoinInputDOM = $('.trade-input')
+const tradePlayerInputDOM = $('.player-trade-input')
+const setBountyPlayerInputDOM = $('.player-bounty-input')
+const bountyInputDOM = $('.bounty-input')
+const setBountyDOM = $('.bounty-set')
+const bountiesDOM = $('.bounty-for-player')
+const actionModalDOM =  $('#select-player-modal')
+const gameOverDOM =  $('#game-over-modal')
+const messageInputDOM = $('#chat-message-input')
+const pointCointDOM = $('.point-count')
+const roundDOM = $('.round')
+const bankDOM = $('.bank-coin-count')
+const yourButtonDOM = $('.your-button')
+
+$( document ).ready(function() {
+  bountiesDOM.hide()
+  const savedSession = localStorage.getItem('state') && JSON.parse(localStorage.getItem('state')) || state
+  state = savedSession
+  for (var key in survivors) {
+    if(!state.survivor_names.includes(survivors[key].name)) {
+      state.survivor_names.push(survivors[key].name)
+    }
+  }
+  if (survivors.length < 4) {
     $('.vote-button').addClass('disabled')
   }
-  //My wonderful websockets
-  const chatSocket = new WebSocket(
+
+  state.survivor_names.forEach((s, index) => {
+    renderVoteCount(s)
+  })
+
+  coinCountDOM.text(state.coins)
+  renderBounties()
+  renderPointCount()
+
+  if(state.votee) {
+    hasVotedRender()
+  }
+  validateCards()
+  validateImmunity()
+  hideModals()
+  updateRound()
+  renderLeaderboad()
+  renderBank()
+
+
+});
+
+
+  //My wonderful websocket
+  var chatSocket = new WebSocket(
     'ws://'
     + window.location.host
     + '/ws/chat/'
@@ -22,35 +92,121 @@ window.initChat = (room, player, survivors) => {
       'command': 'add_player'
     }))}
 
+  chatSocket.onclose = function(e) {
+    console.error('Chat socket closed unexpectedly');
+    setTimeout(function() {
+    var chatSocket = new WebSocket(
+      'ws://'
+      + window.location.host
+      + '/ws/chat/'
+      + room
+      + '/'
+  );
+    }, 1000);
+  };
 
 
-  function youAreThirdPlaceRender(data) {
-    survivor_names.forEach(survivor => {
-      const survivorDiv = $(`.survivor-wrapper[data-survivor=${survivor}]`)
-      if(data.current_losers.includes(survivor)) {
-        survivorDiv.find('.survivor-pill').addClass('voted-out')
-        $(survivorDiv).find('.vote-count').text('Voting...')
-      } else {
-        survivorDiv.find('.vote-button').removeClass('disabled')
-      }
-    })
+  function saveState() {
+    localStorage.setItem('state', JSON.stringify(state));
+  }
+
+  //// RENDER FUNCTIONS ////
+  function showModal(action) {
+    state.intelAction = action
+    actionModalDOM.show()
+  }
+
+  function hideModals() {
+    actionModalDOM.hide()
+    gameOverDOM.hide()
+  }
+
+  function renderBank() {
+    bankDOM.text(state.bankCoins)
+  }
+
+  function tradeExecutedRender() {
+    acceptTradeDOM.addClass('disabled')
+    tradeCoinInputDOM.val('')
+    tradePlayerInputDOM.val('')
+    coinCountDOM .text(state.coins)
+  }
+
+  function renderBounties() {
+    setBountyDOM.addClass('disabled')
+    bountyInputDOM.val('')
+    setBountyPlayerInputDOM .val('')
+    coinCountDOM.text(state.coins)
+
+    Object.keys(state.bounties).forEach(function(survivor) {
+        const survivorDiv = $(`.survivor-wrapper[data-survivor=${survivor}]`)
+        const bountyDiv = survivorDiv.find('.bounty-for-player')
+        bountyDiv.show()
+        bountyDiv.find('.bounty-amount').text(state.bounties[survivor])
+    });
+
+  }
+
+  function hasVotedRender() {
+    $('.vote-button').addClass('disabled');
+    $(`.survivor-wrapper[data-survivor=${state.votee}]`).find('.survivor-pill').addClass('voted-out')
   }
 
 
-  function youAreInFinalRoundRender(data) {
-     survivor_names.forEach(survivor => {
-      const survivorDiv = $(`.survivor-wrapper[data-survivor=${survivor}]`)
-      if(data.current_losers.includes(survivor)) {
-        survivorDiv.find('.survivor-pill').addClass('voted-out')
-        $(survivorDiv).find('.vote-count').text('Voting...')
-      }
-    })
+  function renderVoteCount(s) {
+    const survivorDiv = $(`.survivor-wrapper[data-survivor=${s}]`)
+    var text = state[s] || 0
+    var voteLabel = state[s] === 1 ? 'Vote' : 'Votes'
+    var isLoser = state.current_losers.includes(s)
+    $(survivorDiv).find('.vote-count').text(`${text} ${voteLabel}`)
+    if(isLoser) {
+      $(survivorDiv).find('.vote-count').addClass('loser')
+    } else {
+      $(survivorDiv).find('.vote-count').removeClass('loser')
+    }
   }
 
+  function renderNewPlayer(player) {
+    var survivorDiv = $('.survivor-wrapper').clone()[0]
+    $(survivorDiv).attr('data-survivor', player)
+    $(survivorDiv).find('.vote-selection').text(`${player}`)
+    $(survivorDiv).find('.vote-selection')
+    $(survivorDiv).find('.vote-button').attr('data-survivor', player)
+    $(survivorDiv).find('.vote-button').removeClass('your-button').text('Vote')
+    $('.survivors-list').append(survivorDiv)
+    state.survivor_names.push(player)
+    if(state.survivor_names.length >= 2) {
+      $('.vote-button').removeClass('disabled')
+    }
+    var leaderboardDiv = $('.score-row').clone()[0]
+    $(leaderboardDiv).find('.leaderboard-point').attr('data-survivor', player)
+    $(leaderboardDiv).find('.leaderboard-name').text(player)
+    $('.leaderboard').append(leaderboardDiv)
+  }
 
+  function renderRedactedMessageState() {
+    messageInputDOM.attr('placeholder', 'Send an anonymous message to the group or to a player...')
+    messageInputDOM.addClass('redacted')
+  }
 
+  function renderPointCount() {
+    pointCointDOM.text(state.points)
+  }
+
+  function renderLeaderboad() {
+    for (var i in state.survivor_names) {
+      const survivor = state.survivor_names[i]
+      const points = state.leaderboard[`${survivor}`]
+      const rowDiv = $(`.point-count[data-survivor=${survivor}]`)
+      rowDiv.text(points)
+    }
+  }
+
+  ////  /////
+
+  //// UTILITY FUNCTIONS ////
   function parseInput(message) {
-    const regex = new RegExp('/w[ ][A-Za-z_]* ')
+    const regex = new RegExp('/w[ ][A-Za-z_]*')
 
     const splitReceiver = regex.exec(message) ? regex.exec(message)[0] : '' // /w example_mame
     const whispered = splitReceiver ? splitReceiver.split(' ')[1] : room // example_name
@@ -65,7 +221,7 @@ window.initChat = (room, player, survivors) => {
     );
     var resultHTML = ''
 
-    const result = survivor_names.filter(name => regex.test(name))
+    const result = state.survivor_names.filter(name => regex.test(name))
     const isLastOption = Object.keys(result).length == 1
     if(isLastOption) {
       $('.tab-select').show()
@@ -76,7 +232,9 @@ window.initChat = (room, player, survivors) => {
     for (var key in result) {
       const survivor = result[key]
       const selected = isLastOption ? 'selected' : ''
-      resultHTML += `<div class='message-survivor-option ${selected}' data-survivor=${survivor}>${survivor}</div>`
+      if(survivor != player) {
+        resultHTML += `<div class='message-survivor-option ${selected}' data-survivor=${survivor}>${survivor}</div>`
+      }
     }
     $('.survivor-name-dropdown').html(resultHTML)
   }
@@ -84,12 +242,61 @@ window.initChat = (room, player, survivors) => {
 
   function formatMessage(privateMessage, isOwnPrivateMessage , roomMessage, data) {
     if(privateMessage) {
-      return '[ ' + data.player + ' whispers ]: ' 
+      return '[' + data.player + ' whispers]: ' 
     }
     if(isOwnPrivateMessage && !roomMessage) {
-      return '[ ' + `you whispered ${data.receiver}` +  ' ]: ' 
+      return '[' + `you whispered ${data.receiver}` +  ']: ' 
     }
-    return '[ ' + data.player + ' ]: '
+    return '[' + data.player + ']: '
+  }
+
+  function validateTrade() {
+    const hasValidTrade = Number(tradeCoinInputDOM.val()) <= state.coins && tradeCoinInputDOM.val() != 0
+    const isValidPlayer = state.survivor_names.includes(tradePlayerInputDOM.val()) && tradePlayerInputDOM.val() != player
+    if(hasValidTrade && isValidPlayer) {
+      acceptTradeDOM.removeClass('disabled')
+    } else {
+      acceptTradeDOM.addClass('disabled')
+    }
+  }
+
+  function validateCards() {
+    const all_cards = $('.intel-card')
+    all_cards.each((i) => {
+      const card = $(all_cards[i]).find('.wrapper')
+      const price = state[card.attr('data-card-price')]
+      if(price > state.coins) {
+        card.addClass('disabled')
+      } else {
+        card.removeClass('disabled')
+      }
+    })
+  }
+
+
+  function validateBounty() {
+    const hasValidBounty = Number(bountyInputDOM.val()) <= state.coins && bountyInputDOM.val() != 0
+    const isValidPlayer = state.survivor_names.includes(setBountyPlayerInputDOM.val())
+    if(hasValidBounty&& isValidPlayer) {
+      setBountyDOM.removeClass('disabled')
+    } else {
+      setBountyDOM.addClass('disabled')
+    }
+  }
+
+  function validateImmunity() {
+    if(state.coins < 5) {
+      yourButtonDOM.addClass('disabled')
+    } else {
+      yourButtonDOM.removeClass('disabled')
+    }
+
+  }
+  ////  ////
+
+
+  function updateRound() {
+    roundDOM.text(state.round)
   }
 
   chatSocket.onmessage = function(e) {
@@ -101,66 +308,114 @@ window.initChat = (room, player, survivors) => {
     if (roomMessage || privateMessage || isOwnPrivateMessage && data.message){
         var label = formatMessage(privateMessage, isOwnPrivateMessage, roomMessage, data)
         document.querySelector('#chat-log').value += ( label + data.message + '\n');
+        $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
+    }
+
+    if (data.message_card) {
+      for (var i in data.messages) {
+        const message = data.messages[i]
+        if(message.receiver != room) {
+          document.querySelector('#chat-log').value += ( '[' + message.sender + ' TO ' + message.receiver + ']: ' + message.message + '\n');
+        }
+      }
+    }
+
+    if (data.see_votes_from_player) {
+      for (var i in data.all_votes) {
+        const vote = data.all_votes[i]
+        document.querySelector('#chat-log').value += ( '[VOTE INTEL]: ' + vote + '\n');
+      }
+    }
+
+    if (data.see_votes) {
+      for (var i in data.all_votes) {
+        const vote = data.all_votes[i]
+        document.querySelector('#chat-log').value += '[VOTED FOR YOU]: ' + vote + '\n'
+      }
     }
 
     //kick loser(s) if round over
     if(data.round_over === true) {
-      if(data.current_losers.includes(player)) {
-        window.location.pathname = '/home/'
-      } else {
-        data.current_losers.forEach(loser => { //remove all losers
-          $(`.survivor-wrapper[data-survivor=${loser}]`).remove()
-        })
-        $('.vote-button').removeClass('disabled')
-        $('.survivor-pill').removeClass('voted-out')
-        survivor_names.forEach((s, index) => {
-          const survivorDiv = $(`.survivor-wrapper[data-survivor=${s}]`)
-          var text = data[s] || 0
-          var voteLabel = data[s] === 1 ? 'Vote' : 'Votes'
-          // $(`.vote-count.${s}`).text(`${text} ${voteLabel}`)
-          $(survivorDiv).find('.vote-count').text(`${text} ${voteLabel}`)
-        })
+      state.current_losers = data.current_losers
+      state.coins = data.coins
+      state.round = data.round
+      state.votee = null
+      state.points = data.points
+      state.leaderboard = data.leaderboard
+      state.bounties = {}
+
+      updateRound()
+      coinCountDOM.text(state.coins)
+      $('.bounty-for-player').hide()
+      renderPointCount()
+      saveState()
+
+      renderLeaderboad()
+      if(state.current_losers.includes(player)) {
+        console.log('loser')
       }
+      $('.vote-button').removeClass('disabled')
+      $('.survivor-pill').removeClass('voted-out')
+      state.survivor_names.forEach((s, index) => {
+        state[s] = data[s]
+        renderVoteCount(s)
+        saveState()
+      })
     }
 
-    //Generate final round state.
-    if(data.final_round === true) {
-      $('.survivor-pill').removeClass('voted-out')
-      if(data.current_losers.includes(player)) {
-        youAreThirdPlaceRender(data)
-      } else {
-        youAreInFinalRoundRender(data)
-      }
-    }
+    // //Generate final round state.
+    // if(data.final_round === true) {
+    //   state.votee = null
+    //   state.current_losers = data.current_losers
+    //   if(data.current_losers.includes(player)) {
+    //     state.isThirdPlace = true
+    //     youAreThirdPlaceRender()
+    //   } else {
+    //     state.isFinalRound = true
+    //     youAreInFinalRoundRender(data)
+    //   }
+    //   $('.survivor-pill').removeClass('voted-out')
+    //   saveState()
+    // }
 
     if(data.game_over === true) {
-      const winner = survivor_names.filter(x => !data.current_losers.includes(x))[0]
-      const winnerDiv = $(`.survivor-wrapper[data-survivor=${winner}]`)
-      $(winnerDiv).addClass('winner')
-      if(winner === player) {
-        $(winnerDiv).find('vote-count').text('You Won!')
-      } else {
-         $(winnerDiv).find('vote-count').text('Winner!')
-      }
+      gameOverDOM.show()
+      gameOverDOM.find('.winner-text').text(data.winner + ' has won!')
+      saveState()
+    }
+
+    if(data.bank_coins != undefined) {
+      state.bankCoins = data.bank_coins
+      saveState()
+      renderBank() 
     }
 
     //Player has joined, create new element
-    if(data.is_new_player && data.player != player && !survivor_names.includes(data.player)) {
-      var survivorDiv = $('.survivor-wrapper').clone()[0]
-      $(survivorDiv).attr('data-survivor', data.player)
-      $(survivorDiv).find('.vote-selection').text(`${data.player}`)
-      $(survivorDiv).find('.vote-button').attr('data-survivor', data.player)
-      $('.survivors-list').append(survivorDiv)
-      survivor_names.push(data.player)
-      if(survivor_names.length >= 2) {
-        $('.vote-button').removeClass('disabled')
-      }
+    if(data.is_new_player && data.player != player && !state.survivor_names.includes(data.player)) {
+      renderNewPlayer(data.player)
     }
+
+    if(data.trade) {
+      state.coins = data.coins
+      tradeExecutedRender()
+      saveState()
+    }
+
+    if(data.new_bounty) {
+      state.bounties[data.set_for] = data.new_bounty
+      saveState()
+      renderBounties()
+    }
+    if(data.coins != undefined) {
+      state.coins = data.coins
+      coinCountDOM.text(data.coins)
+      saveState()
+    }
+    validateCards()
+    validateImmunity()
   };
 
-  chatSocket.onclose = function(e) {
-    console.error('Chat socket closed unexpectedly');
-  };
+
 
   $('#chat-message-input').bind('keydown', e => {
    const messageInputDom = document.querySelector('#chat-message-input');
@@ -168,12 +423,14 @@ window.initChat = (room, player, survivors) => {
       e.preventDefault();
       if($('.message-survivor-option.selected').length) {
         messageInputDom.value = "/w " + $('.message-survivor-option.selected').attr('data-survivor')
+        $(messageInputDom).trigger("change");
       }
     }
   })
 
 
-  $('#chat-message-input').bind('keyup', e => {
+
+  $('#chat-message-input').bind("keyup", e => {
     const messageInputDom = document.querySelector('#chat-message-input');
     const message = messageInputDom.value;
     const whispered = parseInput(message)
@@ -184,42 +441,131 @@ window.initChat = (room, player, survivors) => {
     } else {
       $('.dropdown-wrapper').hide()
     }
-    if(survivor_names.includes(whispered)) {
-      receiver = whispered
+    if(state.survivor_names.includes(whispered) && whispered != player) {
+      $('.dropdown-wrapper').hide()
+      state.message_receiver = whispered
       $('#chat-message-input').addClass('private-message')
       messageInputDom.value = ''
-      messageInputDom.placeholder = `Whisper ${receiver}...`
+      messageInputDom.placeholder = `Whisper ${state.message_receiver}...`
     }
     if (e.which === 13) {  // enter, return 
-      if(message != '') {
+
+      if(message != '') { 
+        if (state.is_redacted && state.message_receiver != room) { //Quick fix to show your own anonymous message (REFACTOR)
+          document.querySelector('#chat-log').value += '[Anonymous whisper to ' + state.message_receiver + ']: ' + message + '\n'
+        }
+
         chatSocket.send(JSON.stringify({
             'message': message,
             'command': 'chat_message',
             'player': player,
-            'receiver' : receiver
+            'receiver' : state.message_receiver,
+            'is_redacted': state.is_redacted
         }));
+        state.is_redacted = false
     }
       messageInputDom.value = '';
-      messageInputDom.placeholder = 'Chat to Form Alliances...'
-      receiver = room
+      messageInputDOM.removeClass('redacted')
+      messageInputDom.placeholder = 'Chat to Form Alliances... /w to private message'
+      state.message_receiver = room
       $('#chat-message-input').removeClass('private-message')
     }
   });
 
   $('.vote-button').live('click', e => {
-    $('.vote-button').addClass('disabled');
-    var selectedSurvivor = e.target.getAttribute('data-survivor')
-    $(`.survivor-wrapper[data-survivor=${selectedSurvivor}]`).find('.survivor-pill').addClass('voted-out')
+    state.votee = e.currentTarget.getAttribute('data-survivor')
+    state.hasVoted = true;
+    hasVotedRender()
     chatSocket.send(JSON.stringify({
         'player': player,
-        'votee' : e.target.getAttribute('data-survivor') ,
-        'command': 'vote'
-    }))});
+        'votee' : state.votee ,
+        'command': 'vote',
+    }))
+    saveState()
+    });
+
+  tradePlayerInputDOM.bind('keyup', e => {
+    validateTrade()
+  })
+
+  tradeCoinInputDOM.bind('keyup', e => {
+    validateTrade()
+  })
+
+
+  setBountyPlayerInputDOM.bind('keyup', e => {
+    validateBounty()
+  })
+
+  setBountyDOM.bind('keyup', e => {
+    validateBounty()
+  })
 
   $('.survivor-name-dropdown').click(e => {
     const survivor = $(e.target).attr('data-survivor')
     $('#chat-message-input').val(`/w ${survivor}`)
-    $('#chat-message-input').focus();
+    $('#chat-message-input').keyup()
+  })
+
+  $('.accept-trade').click(e => {
+    const playerToTrade = $('.player-trade-input').val()
+    const trade = Number($('.trade-input').val())
+    chatSocket.send(JSON.stringify({
+      'trader' : player,
+      'tradee' : playerToTrade,
+      'coins': trade,
+      'command': 'trade'
+    }))
+  })
+
+  $('.bounty-set').click(e => {
+    const setFor = setBountyPlayerInputDOM.val()
+    const bountyAmount = Number(bountyInputDOM.val())
+    chatSocket.send(JSON.stringify({
+      'setter' : player,
+      'set_for' : setFor,
+      'bounty_amount': bountyAmount,
+      'command': 'bounty'
+    }))
+  })
+
+
+  //// Intel Card Clicks ////
+  $('.message-card').click(e=> {
+    showModal('message_card')
+  })
+
+  $('.vote-card').click(e=> {
+    chatSocket.send(JSON.stringify({
+      'player': player,
+      'command': 'see_votes'
+    }))
+  })
+
+  $('.anonymous-card').click(e=> {
+    state.is_redacted = true 
+    renderRedactedMessageState()
+    })
+
+  $('.vote-from-player-card').click(e=> {
+    showModal('see_votes_from_player')
+  })
+  //// ////
+
+  $('.close-modal').click(e => {
+    e.preventDefault()
+    hideModals()
+  })
+
+  $('.accept-action-item').click(e => {
+    const targetPlayer = $('.action-item-input').val()
+    chatSocket.send(JSON.stringify({
+      'player': player,
+      'target_player': targetPlayer,
+      'command': state.intelAction
+    }))
+
   })
 
 }
+
