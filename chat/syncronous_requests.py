@@ -1,6 +1,7 @@
 from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async
 from asgiref.sync import async_to_sync
+from django.db.models import Min
 import operator
 from .models import Message, Player, Vote, Room
 from django.db.models import Count
@@ -20,11 +21,51 @@ def reset_player_state(room_obj):
 		room_obj.bank = room_obj.bank + player.bounty
 		player.bounty = 0
 		player.immunity = False
+		player.num_voted_for = 0
+		player.coin_loss_distribution = 0
 		player.coins = player.coins + 1
 		player.save()
 		room_obj.save()
 	room_obj.game_round = room_obj.game_round + 1
 	room_obj.save()
+
+
+#Responsible for distributing objectives and removing stale objectives
+def handle_player_objectives(room_obj, ret_dict):
+	all_players = Player.objects.filter(room=room_obj)
+	winner = ret_dict.get('bank_winner')
+	for player in all_players:
+		has_objective = player.objective != 'Pass'
+		if winner == player.name:
+			player.objective_state = 0
+			player.objective = 'Pass'
+			player.player_objective = ''
+		elif has_objective:
+			objective_state = player.objective_state
+			if objective_state == 2:
+				player.objective = 'Pass'
+				player.player_objective = ''
+				player.ojective_state = 0
+			else: 
+				player.objective_state = player.objective_state + 1
+		else: 
+			objectives = ['Rob'] * 33 + ['Pass'] * 66
+			random_objective = random.choice(objectives)
+			
+			if random_objective != 'Pass':
+				all_current_targets = [player.player_objective for player in all_players]
+
+				target_candidates = all_players.exclude(name=player.name).exclude(name__in=all_current_targets)
+				if len(target_candidates) == 0:
+					random_objective = 'Pass'
+				else:
+					player.objective = random_objective
+					random_player_name = target_candidates.order_by('?').first()
+					player.player_objective = random_player_name.name
+			else:
+				player.player_objective = ''
+		
+		player.save()
 
 def handle_points_check(ret_dict, room_obj):
 	all_players = Player.objects.filter(room=room_obj)
@@ -34,7 +75,7 @@ def handle_points_check(ret_dict, room_obj):
 
 	sorted_scores = sorted(leaderboard.values(), reverse=True)
 	#winner if the highest score is sufficient and there is no tie
-	if sorted_scores[0] > 3 and sorted_scores[1] != sorted_scores[0]:
+	if sorted_scores[0] > 9 and sorted_scores[1] != sorted_scores[0]:
 		ret_dict['game_over'] = True
 		room_obj.game_over = True
 		room_obj.save()
@@ -43,7 +84,12 @@ def handle_points_check(ret_dict, room_obj):
 				ret_dict['winner'] = name	
 	ret_dict['leaderboard'] = leaderboard
 
- 
+def load_current_coins(room_obj, ret_dict):
+	ret_dict['leaderboard_coins'] = {}
+	players = Player.objects.filter(room=room_obj)
+	for player in players:
+		ret_dict['leaderboard_coins'][player.name] = player.coins
+
 
 def handle_round_end(ret_dict, room_obj): #
 	#Send message to group
@@ -58,28 +104,37 @@ def handle_round_end(ret_dict, room_obj): #
 	ret_dict['player'] = 'ANNOUNCEMENT'
 	ret_dict['message'] = message
 	loser_players = Player.objects.filter(name__in=ret_dict['current_losers'])
-	loser_coins = {}
-
-
-	for player in loser_players:
-		loser_coins[player.name] = math.ceil(player.coins / 2) + player.bounty
 
 	for loser in loser_players:
-		loser.coins = math.ceil(loser.coins / 2)
+		loser.coin_loss_distribution = math.ceil(loser.coins / 2) + loser.bounty
+		loser.num_voted_for = len(Vote.objects.filter(room=room_obj, votee=loser.name, game_round=room_obj.game_round))
+		loser.coins = math.floor(loser.coins / 2)
 		loser.bounty = 0
 		loser.save()
+
+
 	#Give each player 1 coin for new round, plus a share of whoever they killed 
 	survivng_players = Player.objects.filter(room=room_obj).exclude(name__in=ret_dict['current_losers'])
 	for player in survivng_players:
 		player_vote = Vote.objects.get(room=room_obj, voter=player.name, game_round=room_obj.game_round)
-		if loser_coins.get(player_vote.votee) is not None: #Player voted the correct person out
-			num_voted_for_loser = len(Vote.objects.filter(room=room_obj, votee=player_vote.votee))
-			coin_bonus = loser_coins.get(player_vote.votee) // num_voted_for_loser
+		voted_for = Player.objects.get(name = player_vote.votee)
+		if voted_for in loser_players: #Player voted the correct person out
+			coin_bonus = voted_for.coin_loss_distribution // voted_for.num_voted_for
+			voted_for.coin_loss_distribution = voted_for.coin_loss_distribution - coin_bonus
 			player.points = player.points + 1
+
+			voted_for.num_voted_for = voted_for.num_voted_for - 1
+
+			if player_vote.votee == player.player_objective:
+				coin_bonus += room_obj.bank
+				room_obj.bank = 0
+				ret_dict['bank_winner'] = player.name
 		else:
 			coin_bonus = 0
 		player.coins = player.coins + coin_bonus
 		player.save()
+		voted_for.save()
+		
 
 	reset_player_state(room_obj)
 	
@@ -97,6 +152,10 @@ def handle_round_end_immunity(ret_dict, room_obj): #
 	immunity_players = Player.objects.filter(name__in=ret_dict['current_losers'])
 	immunity_players_names = [player.name for player in immunity_players]
 
+	for player in immunity_players:
+		player.points  = player.points + 2
+		player.save()
+
 	#If the player voted for someone with immunity, give up half their coins
 	other_players = Player.objects.filter(room=room_obj).exclude(name__in=ret_dict['current_losers'])
 	for player in other_players :
@@ -105,14 +164,18 @@ def handle_round_end_immunity(ret_dict, room_obj): #
 		if player_vote.votee in immunity_players_names and not player_vote.is_immunity:
 			coins_to_give_up = math.ceil(player.coins / 2)
 			player.coins  = player.coins - coins_to_give_up
+
+			if(immunity_player_object.player_objective == player.name):
+				coins_to_give_up += room_obj.bank
+				room_obj.bank = 0
+				ret_dict['bank_winner'] = player.name
+
 			immunity_player_object.coins = immunity_player_object.coins + coins_to_give_up
-		immunity_player_object.save()	
-		immunity_player_object.coins = immunity_player_object.coins
+			immunity_player_object.save()
+
 		player.save()
 
-	for player in immunity_players:
-		player.points  = player.points + 1
-		player.save()
+
 
 	reset_player_state(room_obj)
 	room_obj.save()
@@ -136,19 +199,28 @@ def handle_regular_vote(ret_dict, room_obj, voter):
 	ret_dict['receiver'] = room_obj.name
 	ret_dict['message'] = ret_dict_message
 
+
+#This function does all of the heavy lifting for deciding whena rpound ends, who lost, and what states must update
 def format_votes(grouped_players, all_current_players, room_obj, voter):
 	ret_dict = {}
 	for player in grouped_players:
 		ret_dict[player['votee']] = player['total']
 	list_of_losers = list()
+	
+	#First grab all names with max votes
 	if ret_dict:
 		max_vote = max(ret_dict.items(), key=operator.itemgetter(1))[1]
 		for key, value in ret_dict.items():
 			if value == max_vote:
 				list_of_losers.append(key)
 
-		ret_dict['current_losers'] = [list_of_losers[random.randint(0, len(list_of_losers) -1 )]] #picks random loser
+
+		#Then find the minimum coins out of them. Ties are broken at random
+		super_loser = Player.objects.filter(name__in=list_of_losers).values_list('name').annotate(Min('coins')).order_by('coins')[0]
+		ret_dict['current_losers'] = [super_loser[0]] 
 	
+	
+
 	all_current_votes =  Vote.objects.filter(room=room_obj, game_round=room_obj.game_round)
 	round_ended = len(all_current_players) <= len(all_current_votes)
 	final_round = len(all_current_players) - len(list_of_losers) == 2 and round_ended
@@ -158,18 +230,23 @@ def format_votes(grouped_players, all_current_players, room_obj, voter):
 	if round_ended:
 		if ret_dict.get('current_losers'):
 			immunity_voted = Player.objects.get(name=ret_dict['current_losers'][0]).immunity
-		else: #Corer case in which everyone votes
+		else: #Corner case in which everyone votes immunity
 			ret_dict['current_losers'] = []
 
 
 	if round_ended and immunity_voted:
 		handle_round_end_immunity(ret_dict, room_obj)
 		handle_points_check(ret_dict, room_obj)
+		load_current_coins(room_obj, ret_dict)
+		handle_player_objectives(room_obj, ret_dict)
 	elif round_ended:
 		handle_round_end(ret_dict, room_obj)
 		handle_points_check(ret_dict, room_obj)
+		load_current_coins(room_obj, ret_dict)
+		handle_player_objectives(room_obj, ret_dict)
 	else:
 		handle_regular_vote(ret_dict, room_obj, voter)
+
 
 	ret_dict['type'] = 'receive_vote'
 	ret_dict['round'] = room_obj.game_round

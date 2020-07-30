@@ -34,14 +34,26 @@
 
     <head> <script src="https://kit.fontawesome.com/2ce8473957.js" crossorigin="anonymous"></script> </head>
     <div class='top-row'>
-        <div class='you-are'>
-            <span class='you-are-label'> You are: {{ player }} </span>
-            <div class='coin-info'> <div class='coin-label'> Coins: </div> 
-            <div class='coin-count player-coin-count'> 5 </div>
-                <img src='{% static 'coin.png' %}' class='coin-img'></img>
-            </div>
-            <div><span class='victory-points'> Victory Points: </span> <span class='point-count'> 0 </span></div>
+        <div class='back you-are'>
+            <i class="fas fa-arrow-left"></i>
         </div>
+        <div class='you-are-wrapper'>
+            <div class='you-are'>
+                <span class='you-are-label'> You are: {{ player }} </span>
+                <div class='coin-info'> <div class='coin-label'> Coins: </div> 
+                <div class='coin-count player-coin-count'> 5 </div>
+                    <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                </div>
+               <!--  <div><span class='victory-points'> Victory Points: </span> <span class='point-count'> 0 </span></div> -->
+
+            </div>
+            <div class= 'you-are bank-bonus'> 
+                <span class='bank-bonus-label'> Bank Bonus</span>
+                <span class='player-objective'> </span>
+            </div>
+        </div>
+
+
         <div class='bank you-are'>
             <img src='{% static 'bank.png' %}' class='bank-img'></img>
             <div class='bank-count-wrapper coin-info'>
@@ -58,7 +70,7 @@
     </div>
     <div class='game-body'>
         <div class="chat-area">
-        <textarea id="chat-log" cols="100" rows="30" readonly></textarea>
+        <textarea id="chat-log" cols="100" rows="28" readonly></textarea>
         <input id="chat-message-input" type="text" size="100" placeholder="Chat to Form Alliances... /w to private message">
         </div>
         <div class='dropdown-wrapper' style="display:none">
@@ -106,7 +118,7 @@
                                             <img src='{% static 'coin.png' %}' class='coin-img'></img>
                                             <span> ) </span>
                                         </div>
-                                        <div class='vote-button' data-survivor={{ survivor.name }}> Vote </div>
+                                        <div class='vote-button' data-survivor={{ survivor.name }}> Rob </div>
                                     </div>
                                     <span class='vote-count'> </span>
                                 </div>
@@ -119,7 +131,20 @@
                     <div class='leaderboard'> 
                         {% for survivor in survivors %}
                             <div class='score-row'> 
-                                <span class='leaderboard-name'> {{ survivor.name }} </span> <span class='point-count leaderboard-point' data-survivor={{ survivor.name }}> 0 </span>
+                                <span class='leaderboard-name'> {{ survivor.name }} </span> 
+                                <div>
+                                    <span> Victory Points:
+                                    <span class='point-count leaderboard-point' data-survivor={{ survivor.name }}> 0 </span>
+                                </div>
+                                <div class='leaderboard-coins-row'>
+                                    <span> Coins: </span> 
+                                    <span>
+                                        <div class='coin-info'>
+                                            <div class='coin-count leaderboard-coins' data-survivor={{ survivor.name }}> 5 </div>
+                                            <img src='{% static 'coin.png' %}' class='coin-img'></img>
+                                        </div>          
+                                    </span>
+                                </div>
                             </div>
                         {% endfor %}
                     </div>

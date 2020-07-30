@@ -29,6 +29,11 @@ class Player(models.Model):
     voted_for_you_price = models.IntegerField(default=0)
     player_vote_price = models.IntegerField(default=0)
     see_messages_price = models.IntegerField(default=0)
+    objective = models.CharField(max_length=30, default='Pass')
+    player_objective = models.CharField(max_length=30, default='')
+    objective_state = models.IntegerField(default=0)
+    coin_loss_distribution = models.IntegerField(default=0)
+    num_voted_for = models.IntegerField(default=0)
 
 
 class Message(models.Model):

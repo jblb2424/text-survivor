@@ -98,7 +98,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'type': 'broadcast'
         }
         await self.update_bank()
-        await sync_to_async(message_package.update)({'coins': player_obj.coins})
         await self.channel_layer.group_send(
             self.room_group_name,
             message_package
@@ -193,14 +192,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     #### Receive methods for data response back to player ####
     async def broadcast(self, event):
-         await self.send(text_data=json.dumps(event))
+        package = event
+        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+        await self.send(text_data=json.dumps(package))
 
 
     async def receive_vote(self, event):
         packet = event
         player = await database_sync_to_async(Player.objects.get)(name=self.player_name)
         await self.update_bank()
-        await sync_to_async(packet.update)({'coins': player.coins, 'points': player.points})
+        await sync_to_async(packet.update)(
+            {'coins': player.coins, 
+            'points': player.points,
+            'objective': player.objective,
+            'player_objective': player.player_objective
+            }
+            )
         await self.send(text_data=json.dumps(packet))
 
 

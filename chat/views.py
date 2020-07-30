@@ -59,11 +59,12 @@ def room(request, room_name):
 	see_messages_price = random.randint(5, 9)
 
 	room_exists = Room.objects.filter(name=room_name, game_over=False).exists()
+	is_in_room = request.session.get('room') == room_name
 	if not room_exists:
 		return redirect('/home/')
 
 	room = Room.objects.get(name=room_name)
-	if room.player_count >= 6:
+	if room.player_count >= 6 and not is_in_room:
 		return redirect('/home/')
 	
 	if request.session.get('player'):
@@ -87,6 +88,7 @@ def room(request, room_name):
 		new_player.save()
 
 		request.session['player'] = unique_name_word
+		request.session['room'] = room_name
 		room.player_count +=1
 		room.save()
 		current_player = unique_name_word

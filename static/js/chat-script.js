@@ -22,7 +22,11 @@ window.initChat = (
     voted_for_you_price: voted_for_you_price,
     player_vote_price: player_vote_price,
     see_messages_price: see_messages_price,
-    leaderboard: {}
+    hasVoted: false,
+    objective: 'Pass',
+    playerObjective: '',
+    leaderboard: {},
+    leaderboardCoins: {},
   }
 
 //DOM Elements
@@ -41,6 +45,7 @@ const pointCointDOM = $('.point-count')
 const roundDOM = $('.round')
 const bankDOM = $('.bank-coin-count')
 const yourButtonDOM = $('.your-button')
+const playerObjectiveDOM = $('.player-objective')
 
 $( document ).ready(function() {
   bountiesDOM.hide()
@@ -72,11 +77,12 @@ $( document ).ready(function() {
   updateRound()
   renderLeaderboad()
   renderBank()
-
-
+  renderObjective()
 });
 
-
+  $('.back').click(() => {
+    location.href = "http://127.0.0.1:8000/home/";
+  })
   //My wonderful websocket
   var chatSocket = new WebSocket(
     'ws://'
@@ -166,21 +172,23 @@ $( document ).ready(function() {
     }
   }
 
-  function renderNewPlayer(player) {
+  function renderNewPlayer(new_player) {
     var survivorDiv = $('.survivor-wrapper').clone()[0]
-    $(survivorDiv).attr('data-survivor', player)
-    $(survivorDiv).find('.vote-selection').text(`${player}`)
+    $(survivorDiv).attr('data-survivor', new_player)
+    $(survivorDiv).find('.vote-selection').text(`${new_player}`)
     $(survivorDiv).find('.vote-selection')
-    $(survivorDiv).find('.vote-button').attr('data-survivor', player)
-    $(survivorDiv).find('.vote-button').removeClass('your-button').text('Vote')
+    $(survivorDiv).find('.vote-button').attr('data-survivor', new_player)
+    $(survivorDiv).find('.vote-button').removeClass('your-button').text('Rob')
     $('.survivors-list').append(survivorDiv)
-    state.survivor_names.push(player)
-    if(state.survivor_names.length >= 2) {
+    state.survivor_names.push(new_player)
+    if(state.survivor_names.length >= 4) {
       $('.vote-button').removeClass('disabled')
     }
     var leaderboardDiv = $('.score-row').clone()[0]
-    $(leaderboardDiv).find('.leaderboard-point').attr('data-survivor', player)
-    $(leaderboardDiv).find('.leaderboard-name').text(player)
+    $(leaderboardDiv).find('.leaderboard-point').attr('data-survivor', new_player)
+    $(leaderboardDiv).find('.leaderboard-name').text(new_player)
+
+    $(leaderboardDiv).find('.leaderboard-coins').attr('data-survivor', new_player)
     $('.leaderboard').append(leaderboardDiv)
   }
 
@@ -197,11 +205,20 @@ $( document ).ready(function() {
     for (var i in state.survivor_names) {
       const survivor = state.survivor_names[i]
       const points = state.leaderboard[`${survivor}`]
+      const coins = state.leaderboardCoins[`${survivor}`]
       const rowDiv = $(`.point-count[data-survivor=${survivor}]`)
+      const coinRowDiv = $(`.leaderboard-coins[data-survivor=${survivor}]`)
       rowDiv.text(points)
+      coinRowDiv.text(coins)
     }
   }
 
+
+  function renderObjective() {
+    const label  = state.objective + ": " + state.playerObjective
+    const objective = state.objective != 'Pass' ?  label : ' - - - - - - - - - - - - - - - - -'
+    playerObjectiveDOM.text(objective)
+  }
   ////  /////
 
   //// UTILITY FUNCTIONS ////
@@ -253,7 +270,7 @@ $( document ).ready(function() {
   function validateTrade() {
     const hasValidTrade = Number(tradeCoinInputDOM.val()) <= state.coins && tradeCoinInputDOM.val() != 0
     const isValidPlayer = state.survivor_names.includes(tradePlayerInputDOM.val()) && tradePlayerInputDOM.val() != player
-    if(hasValidTrade && isValidPlayer) {
+    if(hasValidTrade && isValidPlayer && state.survivor_names.length >= 4) {
       acceptTradeDOM.removeClass('disabled')
     } else {
       acceptTradeDOM.addClass('disabled')
@@ -265,7 +282,7 @@ $( document ).ready(function() {
     all_cards.each((i) => {
       const card = $(all_cards[i]).find('.wrapper')
       const price = state[card.attr('data-card-price')]
-      if(price > state.coins) {
+      if(price > state.coins || state.survivor_names.length < 4) {
         card.addClass('disabled')
       } else {
         card.removeClass('disabled')
@@ -277,7 +294,7 @@ $( document ).ready(function() {
   function validateBounty() {
     const hasValidBounty = Number(bountyInputDOM.val()) <= state.coins && bountyInputDOM.val() != 0
     const isValidPlayer = state.survivor_names.includes(setBountyPlayerInputDOM.val())
-    if(hasValidBounty&& isValidPlayer) {
+    if(hasValidBounty&& isValidPlayer && state.survivor_names.length >= 4) {
       setBountyDOM.removeClass('disabled')
     } else {
       setBountyDOM.addClass('disabled')
@@ -285,7 +302,7 @@ $( document ).ready(function() {
   }
 
   function validateImmunity() {
-    if(state.coins < 5) {
+    if(state.coins < 5 || state.survivor_names.length < 4 || state.hasVoted) {
       yourButtonDOM.addClass('disabled')
     } else {
       yourButtonDOM.removeClass('disabled')
@@ -337,11 +354,15 @@ $( document ).ready(function() {
     //kick loser(s) if round over
     if(data.round_over === true) {
       state.current_losers = data.current_losers
+      state.hasVoted = false
       state.coins = data.coins
       state.round = data.round
       state.votee = null
       state.points = data.points
       state.leaderboard = data.leaderboard
+      state.leaderboardCoins = data.leaderboard_coins
+      state.objective = data.objective
+      state.playerObjective = data.player_objective
       state.bounties = {}
 
       updateRound()
@@ -349,8 +370,6 @@ $( document ).ready(function() {
       $('.bounty-for-player').hide()
       renderPointCount()
       saveState()
-
-      renderLeaderboad()
       if(state.current_losers.includes(player)) {
         console.log('loser')
       }
@@ -413,6 +432,9 @@ $( document ).ready(function() {
     }
     validateCards()
     validateImmunity()
+    renderLeaderboad()
+    renderObjective()
+
   };
 
 
@@ -559,6 +581,7 @@ $( document ).ready(function() {
 
   $('.accept-action-item').click(e => {
     const targetPlayer = $('.action-item-input').val()
+    actionModalDOM.hide()
     chatSocket.send(JSON.stringify({
       'player': player,
       'target_player': targetPlayer,
