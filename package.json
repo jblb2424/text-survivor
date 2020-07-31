@@ -76,7 +76,7 @@
   },
   "scripts": {
     "dev": "webpack -d --mode=development",
-    "heroku-postbuild": "webpack -p --config ./webpack.prod.config.js --progress",
+    "heroku-postbuild": "webpack -p --mode=production",
     "postinstall": "webpack -p --config ./webpack.prod.config.js --progress",
     "build": "webpack -p --mode=production",
     "heroku-prebuild": "npm install --dev",
