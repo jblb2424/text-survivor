@@ -79,6 +79,7 @@
     "heroku-postbuild": "webpack -p --config ./webpack.prod.config.js --progress",
     "postinstall": "webpack -p --config ./webpack.prod.config.js --progress",
     "build": "webpack -p --mode=production",
+    "heroku-prebuild": "npm install --dev",
     "test": "jest --watch",
     "test-ci": "jest --ci"
   },
