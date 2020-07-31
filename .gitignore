@@ -125,6 +125,6 @@ dmypy.json
 
 node_modules/
 package-lock.json
-webpack-stats.json
+
 
 venv/

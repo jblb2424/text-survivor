@@ -91,7 +91,7 @@ module.exports = function (env, argv) {
       new MiniCssExtractPlugin({
         filename: `css/${fileName}.css`
       }),
-      // new BundleTracker({ filename: './webpack-stats.json' })
+      new BundleTracker({ filename: './webpack-stats.json' })
     ]
   };
 };
