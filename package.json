@@ -76,7 +76,7 @@
   },
   "scripts": {
     "dev": "webpack -d --mode=development",
-    "build": "webpack -p --mode=production",
+    "build": "webpack --mode production --config ./webpack.prod.config.js",
     "test": "jest --watch",
     "test-ci": "jest --ci"
   }
