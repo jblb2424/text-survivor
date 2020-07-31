@@ -81,7 +81,7 @@ $( document ).ready(function() {
 });
 
   $('.back').click(() => {
-    location.href = "http://127.0.0.1:8000/home/";
+    location.href = "http://127.0.0.1:8000/";
   })
   //My wonderful websocket
   var chatSocket = new WebSocket(

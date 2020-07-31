@@ -22,10 +22,10 @@ from rest_framework.generics import (
 from django.shortcuts import redirect
 
 def view_404(request, exception=None):
-    return redirect('/home/')
+    return redirect('')
 
 def index(request):
-	request.session.clear()
+	# request.session.clear()
 	return render(request, 'chat/index.html')
 
 
@@ -61,11 +61,11 @@ def room(request, room_name):
 	room_exists = Room.objects.filter(name=room_name, game_over=False).exists()
 	is_in_room = request.session.get('room') == room_name
 	if not room_exists:
-		return redirect('/home/')
+		return redirect('/')
 
 	room = Room.objects.get(name=room_name)
 	if room.player_count >= 6 and not is_in_room:
-		return redirect('/home/')
+		return redirect('/')
 	
 	if request.session.get('player'):
 		current_player = request.session.get('player')
