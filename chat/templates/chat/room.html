@@ -1,6 +1,9 @@
 {% extends 'site_base.html' %}
 {% load render_bundle get_files from webpack_loader %}
 {% block bundle %}
+<script>
+    var domain = "{{ domain }}"
+</script>
     {% render_bundle 'chat' %}
 {% endblock %}
 <!-- {% load static %} -->
