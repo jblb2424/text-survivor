@@ -45,11 +45,13 @@ def load_room(request):
 
 
 def create_public_room(request):
+	request.session.clear()
 	room = get_random_string(length = 5)
 	new_room = Room.objects.create(name=room)
 	return JsonResponse({'room_id': room})
 
 def create_private_room(request):
+	request.session.clear()
 	room = get_random_string(length = 5)
 	new_room = Room.objects.create(name=room, public=False)
 	return JsonResponse({'room_id': room})

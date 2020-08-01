@@ -28,7 +28,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'robber-room.herokuapp.com']
 SITE_ID = 1
 
 
-DOMAIN = os.environ.get('DOMAIN') or 'http://127.0.0.1:8000/'
+DOMAIN = os.environ.get('DOMAIN') or "http://127.0.0.1:8000/"
 
 # Application definition
 
