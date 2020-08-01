@@ -12,6 +12,7 @@ from random_words import RandomWords
 from django.core import serializers
 User = get_user_model()
 import json
+from django.conf import settings as conf_settings
 from rest_framework.generics import (
     ListAPIView,
     RetrieveAPIView,
@@ -26,7 +27,8 @@ def view_404(request, exception=None):
 
 def index(request):
 	# request.session.clear()
-	return render(request, 'chat/index.html')
+	domain = conf_settings.DOMAIN
+	return render(request, 'chat/index.html', {'domain': domain})
 
 
 #Tries to find an availible room, and will create a public room if it can't find any
