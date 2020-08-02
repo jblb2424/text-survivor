@@ -81,22 +81,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         receiver = event.get('receiver') or self.room_name
-        if event.get('is_redacted'):
-            player = 'REDACTED'
-        else:
-            player = event['player']
-        
         room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
-        await charge_player_for_message(event['player'], room_obj)
-        await save_message(event, self.room_name)
-
         player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+        
         message_package = {
             'message': event['message'],
             'receiver': receiver,
-            'player': player,
             'type': 'broadcast'
         }
+
+        if event.get('is_redacted'):
+            player = 'REDACTED'
+            await charge_player_for_message(event['player'], room_obj)
+            await sync_to_async(message_package.update)({'coins': player_obj.coins})
+        else:
+            player = event['player']
+        
+        message_package.update({'player': player})
+        await save_message(event, self.room_name)
+        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
         await self.update_bank()
         await self.channel_layer.group_send(
             self.room_group_name,
