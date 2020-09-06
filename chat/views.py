@@ -26,7 +26,7 @@ def view_404(request, exception=None):
     return redirect('')
 
 def index(request):
-	# request.session.clear()
+	request.session.clear()
 	domain = conf_settings.DOMAIN
 	return render(request, 'chat/index.html', {'domain': domain})
 

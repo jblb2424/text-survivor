@@ -58,6 +58,8 @@ $( document ).ready(function() {
   }
   if (survivors.length < 4) {
     $('.vote-button').addClass('disabled')
+  } else {
+    renderCountDown()
   }
 
   state.survivor_names.forEach((s, index) => {
@@ -213,6 +215,27 @@ $( document ).ready(function() {
     }
   }
 
+  function renderCountDown() {
+    var timeleft = 10;
+    var downloadTimer = setInterval(function(){
+    timeleft--;
+    $(".timer-label").text(timeleft);
+    if(timeleft <= 0) {
+    
+      state.hasVoted = true;
+      state.votee = state.survivor_names[Math.floor(Math.random() * state.survivor_names.length)];
+      hasVotedRender()
+      chatSocket.send(JSON.stringify({
+        'player': player,
+        'votee' : state.votee ,
+        'command': 'vote',
+      }))
+      saveState()
+    };
+      timeleft = 11
+    },1000);   
+  }
+
 
   function renderObjective() {
     const label  = state.objective + ": " + state.playerObjective
@@ -222,6 +245,7 @@ $( document ).ready(function() {
   ////  /////
 
   //// UTILITY FUNCTIONS ////
+
   function parseInput(message) {
     const regex = new RegExp('/w[ ][A-Za-z_]*')
 
@@ -426,9 +450,10 @@ $( document ).ready(function() {
       renderBounties()
     }
     if(data.coins != undefined) {
+      console.log(data.coins)
       state.coins = data.coins
-      coinCountDOM.text(data.coins)
       saveState()
+      coinCountDOM.text(state.coins)
     }
     validateCards()
     validateImmunity()

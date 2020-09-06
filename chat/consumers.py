@@ -61,6 +61,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.see_votes_from_player(text_data_json)
         if command == 'activate_immunity':
             await self.activate_immunity(text_data_json)
+        if command == 'activate_immunity':
+            await self.activate_immunity(text_data_json)
+        if command == 'random_vote':
+            await self.random_vote(text_data_json)
 
 
 
@@ -77,29 +81,40 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 results
         )
 
+    #Occurs when the player is out of time
+    async def random_vote(self, event):
+        
+        room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
+        await save_vote(event, room_obj)
+
+        #aggregate vote information
+        results  = await aggregate_votes(room_obj, voter)
+        await self.channel_layer.group_send(
+                self.room_group_name,
+                results
+        )
 
 
     async def chat_message(self, event):
         receiver = event.get('receiver') or self.room_name
         room_obj = await database_sync_to_async(Room.objects.get)(name=self.room_name)
-        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+        
         
         message_package = {
             'message': event['message'],
             'receiver': receiver,
             'type': 'broadcast'
         }
-
-        if event.get('is_redacted'):
+        if event.get('is_redacted'):     
             player = 'REDACTED'
             await charge_player_for_message(event['player'], room_obj)
-            await sync_to_async(message_package.update)({'coins': player_obj.coins})
+            player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+            await self.send(text_data=json.dumps({'coins': player_obj.coins}))
         else:
             player = event['player']
         
         message_package.update({'player': player})
         await save_message(event, self.room_name)
-        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
         await self.update_bank()
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -196,7 +211,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     #### Receive methods for data response back to player ####
     async def broadcast(self, event):
         package = event
-        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+        #player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
         await self.send(text_data=json.dumps(package))
 
 

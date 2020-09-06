@@ -4,8 +4,8 @@ from django.views.generic import TemplateView
 
 
 urlpatterns = [
-    path('', include('chat.urls')),
     path('admin/', admin.site.urls),
+    path('', include('chat.urls')),
     path('api-auth/', include('rest_framework.urls')),
     path('chat/', include('chat.api.urls', namespace='chat')),
     path('rest-auth/', include('rest_auth.urls')),

@@ -8,6 +8,7 @@ body
   font-size: 1vw;
 }
 
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -17,6 +18,16 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
+}
+.action-label {
+  text-align: center;
+  margin-bottom: 8px;
+  font-size: 16px;
+  padding: 8px;
+  width: 52%;
+  background-color: #d8c385;
+  border-radius: 5px;
+  box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.22);
 }
 
 .enter-game-wrapper {
@@ -79,6 +90,17 @@ input[type=number] {
     &:hover {
       background-color: rgba(255,227,48,0.21);
     }
+  }
+}
+
+.round-info-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-right: 4.5%;
+  .timer {
+    width: 81px;
+    height: 20px;
+    margin-top: 8px;
   }
 }
 
@@ -401,16 +423,7 @@ input[type=number] {
       justify-content: flex-end;
       align-items: center;
       padding-bottom: 4px;
-      .action-label {
-        text-align: center;
-        margin-bottom: 8px;
-        font-size: 16px;
-        padding: 8px;
-        width: 52%;
-        background-color: #d8c385;
-        border-radius: 5px;
-        box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.22);
-      }
+
     }
   }
 
