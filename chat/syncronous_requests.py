@@ -120,15 +120,18 @@ def handle_round_end(ret_dict, room_obj): #
 		voted_for = Player.objects.get(name = player_vote.votee)
 		if voted_for in loser_players: #Player voted the correct person out
 			coin_bonus = voted_for.coin_loss_distribution // voted_for.num_voted_for
+			points = 1
 			voted_for.coin_loss_distribution = voted_for.coin_loss_distribution - coin_bonus
-			player.points = player.points + 1
+			
 
 			voted_for.num_voted_for = voted_for.num_voted_for - 1
 
 			if player_vote.votee == player.player_objective:
 				coin_bonus += room_obj.bank
+				points += 1
 				room_obj.bank = 0
 				ret_dict['bank_winner'] = player.name
+			player.points = points
 		else:
 			coin_bonus = 0
 		player.coins = player.coins + coin_bonus
