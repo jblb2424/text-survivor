@@ -49,7 +49,7 @@ const playerObjectiveDOM = $('.player-objective')
 
 $( document ).ready(function() {
   bountiesDOM.hide()
-  const savedSession = localStorage.getItem('state') && JSON.parse(localStorage.getItem('state')) || state
+  const savedSession = localStorage.getItem(room) && JSON.parse(localStorage.getItem(room)) || state
   state = savedSession
   for (var key in survivors) {
     if(!state.survivor_names.includes(survivors[key].name)) {
@@ -115,7 +115,7 @@ $( document ).ready(function() {
 
 
   function saveState() {
-    localStorage.setItem('state', JSON.stringify(state));
+    localStorage.setItem(room, JSON.stringify(state));
   }
 
   //// RENDER FUNCTIONS ////

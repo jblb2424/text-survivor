@@ -1,5 +1,4 @@
 $(document).ready(() => {
-  localStorage.removeItem('state')
   document.querySelector('#play').onclick = function(e) {
     $.ajax({
         url: domain + 'load_room/',
