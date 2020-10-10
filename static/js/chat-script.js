@@ -27,6 +27,7 @@ window.initChat = (
     playerObjective: '',
     leaderboard: {},
     leaderboardCoins: {},
+    player: player
   }
 
 //DOM Elements
@@ -96,7 +97,7 @@ $( document ).ready(function() {
 
   chatSocket.onopen = function(e) {
     chatSocket.send(JSON.stringify({
-      'player': player,
+      'player': state.player,
       'command': 'add_player'
     }))}
 
@@ -226,7 +227,7 @@ $( document ).ready(function() {
       state.votee = state.survivor_names[Math.floor(Math.random() * state.survivor_names.length)];
       hasVotedRender()
       chatSocket.send(JSON.stringify({
-        'player': player,
+        'player': state.layer,
         'votee' : state.votee ,
         'command': 'vote',
       }))
@@ -245,6 +246,14 @@ $( document ).ready(function() {
   ////  /////
 
   //// UTILITY FUNCTIONS ////
+
+  function connectionMessage(data) {
+    if(data.is_disconnect) {
+      document.querySelector('#chat-log').value += `[CONNECTION]: ${data.player} has disconnected`
+    } else {
+      document.querySelector('#chat-log').value += `[CONNECTION]: ${data.player} has connected`
+    }
+  }
 
   function parseInput(message) {
     const regex = new RegExp('/w[ ][A-Za-z_]*')
@@ -273,7 +282,7 @@ $( document ).ready(function() {
     for (var key in result) {
       const survivor = result[key]
       const selected = isLastOption ? 'selected' : ''
-      if(survivor != player) {
+      if(survivor != state.player) {
         resultHTML += `<div class='message-survivor-option ${selected}' data-survivor=${survivor}>${survivor}</div>`
       }
     }
@@ -293,7 +302,7 @@ $( document ).ready(function() {
 
   function validateTrade() {
     const hasValidTrade = Number(tradeCoinInputDOM.val()) <= state.coins && tradeCoinInputDOM.val() != 0
-    const isValidPlayer = state.survivor_names.includes(tradePlayerInputDOM.val()) && tradePlayerInputDOM.val() != player
+    const isValidPlayer = state.survivor_names.includes(tradePlayerInputDOM.val()) && tradePlayerInputDOM.val() != state.player
     if(hasValidTrade && isValidPlayer && state.survivor_names.length >= 4) {
       acceptTradeDOM.removeClass('disabled')
     } else {
@@ -344,12 +353,16 @@ $( document ).ready(function() {
     const data = JSON.parse(e.data);
     //Incoming Message
     var roomMessage = data.receiver === room
-    var privateMessage = data.receiver === player
-    var isOwnPrivateMessage = data.player === player
+    var privateMessage = data.receiver === state.player
+    var isOwnPrivateMessage = data.player === state.player
     if (roomMessage || privateMessage || isOwnPrivateMessage && data.message){
         var label = formatMessage(privateMessage, isOwnPrivateMessage, roomMessage, data)
         document.querySelector('#chat-log').value += ( label + data.message + '\n');
         $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
+    }
+
+    if(data.is_disconnect || data.is_connect) { 
+      connectionMessage(data)
     }
 
     if (data.message_card) {
@@ -434,7 +447,7 @@ $( document ).ready(function() {
     }
 
     //Player has joined, create new element
-    if(data.is_new_player && data.player != player && !state.survivor_names.includes(data.player)) {
+    if(data.is_new_player && state.player == null && !state.survivor_names.includes(data.player)) {
       renderNewPlayer(data.player)
     }
 
@@ -488,7 +501,7 @@ $( document ).ready(function() {
     } else {
       $('.dropdown-wrapper').hide()
     }
-    if(state.survivor_names.includes(whispered) && whispered != player) {
+    if(state.survivor_names.includes(whispered) && whispered != state.player) {
       $('.dropdown-wrapper').hide()
       state.message_receiver = whispered
       $('#chat-message-input').addClass('private-message')
@@ -505,7 +518,7 @@ $( document ).ready(function() {
         chatSocket.send(JSON.stringify({
             'message': message,
             'command': 'chat_message',
-            'player': player,
+            'player': state.player,
             'receiver' : state.message_receiver,
             'is_redacted': state.is_redacted
         }));
@@ -524,7 +537,7 @@ $( document ).ready(function() {
     state.hasVoted = true;
     hasVotedRender()
     chatSocket.send(JSON.stringify({
-        'player': player,
+        'player': state.player,
         'votee' : state.votee ,
         'command': 'vote',
     }))
@@ -558,7 +571,7 @@ $( document ).ready(function() {
     const playerToTrade = $('.player-trade-input').val()
     const trade = Number($('.trade-input').val())
     chatSocket.send(JSON.stringify({
-      'trader' : player,
+      'trader' : state.player,
       'tradee' : playerToTrade,
       'coins': trade,
       'command': 'trade'
@@ -569,7 +582,7 @@ $( document ).ready(function() {
     const setFor = setBountyPlayerInputDOM.val()
     const bountyAmount = Number(bountyInputDOM.val())
     chatSocket.send(JSON.stringify({
-      'setter' : player,
+      'setter' : state.player,
       'set_for' : setFor,
       'bounty_amount': bountyAmount,
       'command': 'bounty'
@@ -584,7 +597,7 @@ $( document ).ready(function() {
 
   $('.vote-card').click(e=> {
     chatSocket.send(JSON.stringify({
-      'player': player,
+      'player': state.player,
       'command': 'see_votes'
     }))
   })
@@ -608,7 +621,7 @@ $( document ).ready(function() {
     const targetPlayer = $('.action-item-input').val()
     actionModalDOM.hide()
     chatSocket.send(JSON.stringify({
-      'player': player,
+      'player': state.player,
       'target_player': targetPlayer,
       'command': state.intelAction
     }))

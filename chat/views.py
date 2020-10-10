@@ -26,6 +26,7 @@ def view_404(request, exception=None):
     return redirect('')
 
 def index(request):
+	print(request.session)
 	#request.session.clear()
 	domain = conf_settings.DOMAIN
 	return render(request, 'chat/index.html', {'domain': domain})
@@ -45,13 +46,13 @@ def load_room(request):
 
 
 def create_public_room(request):
-	request.session.clear()
+	#request.session.clear()
 	room = get_random_string(length = 5)
 	new_room = Room.objects.create(name=room)
 	return JsonResponse({'room_id': room})
 
 def create_private_room(request):
-	request.session.clear()
+	#request.session.clear()
 	room = get_random_string(length = 5)
 	new_room = Room.objects.create(name=room, public=False)
 	return JsonResponse({'room_id': room})
@@ -63,7 +64,7 @@ def room(request, room_name):
 	see_messages_price = random.randint(5, 9)
 
 	room_exists = Room.objects.filter(name=room_name, game_over=False).exists()
-	is_in_room = request.session.get('room') == room_name
+	is_in_room = request.session.get(room_name)
 	if not room_exists:
 		return redirect('/')
 
@@ -71,8 +72,8 @@ def room(request, room_name):
 	if room.player_count >= 6 and not is_in_room:
 		return redirect('/')
 	
-	if request.session.get('player'):
-		current_player = request.session.get('player')
+	if request.session.get(room_name):
+		current_player = request.session.get(room_name)
 	else: 
 		rw = RandomWords()
 		word1 = rw.random_word()
@@ -91,8 +92,7 @@ def room(request, room_name):
 		new_player.see_messages_price = see_messages_price
 		new_player.save()
 
-		request.session['player'] = unique_name_word
-		request.session['room'] = room_name
+		request.session[room_name] = unique_name_word
 		room.player_count +=1
 		room.save()
 		current_player = unique_name_word
