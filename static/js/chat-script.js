@@ -447,7 +447,7 @@ $( document ).ready(function() {
     }
 
     //Player has joined, create new element
-    if(data.is_new_player && state.player == null && !state.survivor_names.includes(data.player)) {
+    if(data.is_new_player && data.player != state.player && !state.survivor_names.includes(data.player)) {
       renderNewPlayer(data.player)
     }
 
