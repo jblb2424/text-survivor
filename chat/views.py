@@ -58,6 +58,8 @@ def create_private_room(request):
 	return JsonResponse({'room_id': room})
 
 def room(request, room_name):
+	print('view hitting')
+	print(request)
 	anonymous_price = random.randint(1, 2)
 	player_vote_price = random.randint(3, 7)
 	voted_for_you_price = random.randint(3, 7)
