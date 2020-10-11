@@ -86,7 +86,7 @@ def room(request, room_name):
 			word2 = rw.random_word()
 			unique_name_word = word1 + "_" + word2
 
-
+		print(unique_name_word)
 		new_player = Player.objects.create(name=unique_name_word, room=room)
 		new_player.anonymous_price = anonymous_price
 		new_player.voted_for_you_price = voted_for_you_price
