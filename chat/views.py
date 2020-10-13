@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
+import re
 # Create your views here.
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, get_object_or_404
@@ -59,7 +60,9 @@ def create_private_room(request):
 
 def room(request, room_name):
 	print('view hitting')
-	print(request)
+	user = request.META['HTTP_USER_AGENT']
+	if 'facebookexternalhit' in user or 'Facebot' in user or 'Twitterbot' in user:
+		return redirect('/')
 	anonymous_price = random.randint(1, 2)
 	player_vote_price = random.randint(3, 7)
 	voted_for_you_price = random.randint(3, 7)
