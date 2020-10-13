@@ -61,7 +61,7 @@ def create_private_room(request):
 def room(request, room_name):
 	print('view hitting')
 	user = request.META['HTTP_USER_AGENT']
-	if 'facebookexternalhit' in user or 'Facebot' in user or 'Twitterbot' in user:
+	if 'facebookexternalhit' in user or 'Facebot' in user or 'Twitterbot' in user or 'developers.google.com' in user:
 		return redirect('/')
 	anonymous_price = random.randint(1, 2)
 	player_vote_price = random.randint(3, 7)
