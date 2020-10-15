@@ -22,6 +22,7 @@ from rest_framework.generics import (
     UpdateAPIView
 )
 from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
 
 def view_404(request, exception=None):
     return redirect('')
@@ -58,6 +59,7 @@ def create_private_room(request):
 	new_room = Room.objects.create(name=room, public=False)
 	return JsonResponse({'room_id': room})
 
+@csrf_exempt
 def room(request, room_name):
 	print('view hitting')
 	user = request.META['HTTP_USER_AGENT']
@@ -80,6 +82,9 @@ def room(request, room_name):
 	if request.session.get(room_name):
 		current_player = request.session.get(room_name)
 	else: 
+		print(request.POST)
+		if not request.POST.get('not_a_bot'):
+			return render(request, 'chat/bot-check.html', {'room': room_name, 'domain': conf_settings.DOMAIN})
 		rw = RandomWords()
 		word1 = rw.random_word()
 		word2 = rw.random_word()

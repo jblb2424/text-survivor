@@ -1,0 +1,33 @@
+{% extends 'site_base.html' %}
+{% load render_bundle get_files from webpack_loader %}
+{% block bundle %}
+<!-- rag  tag way to get webcrawlers to stop creating users-->
+<script>
+    var domain = "{{ domain }}"
+</script>
+{% endblock %}
+
+{% block content %}
+	<h1>
+		Are you a bot?
+    </h1>
+    <button class='control-button no-bot'>
+    	No :(
+    </button>
+
+    <script>
+		$(document).ready(() => {
+ 			document.querySelector('.no-bot').onclick = function(e) {
+ 				document.querySelector('.no-bot').textContent = 'Thank You! Refresh Page'
+			    $.ajax({
+			        url: '{{ domain }}' + '{{ room }}/',
+			        type: "POST",
+			        dataType: "json",
+			        data: {'not_a_bot': true},
+			        success: function (data) {
+			        window.location.pathname = '/' + data.room_id + '/';
+			        }
+			    })};
+		});
+    </script>
+{% endblock %}
