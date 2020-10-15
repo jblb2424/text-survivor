@@ -368,14 +368,14 @@ def see_votes_from_player(player_to_see_votes, room_obj, player):
 def activate_immunity(player, room_obj):
 	player_obj = Player.objects.get(name=player)
 	print(player_obj.coins)
-	if player_obj.coins >= 5:
+	if player_obj.coins >= 10:
 		player_voted = Vote.objects.filter(voter=player, game_round=room_obj.game_round).exists()
 		if not player_voted:
 			v = Vote(voter=player, votee=player, room=room, game_round=room_obj.game_round, is_immunity=True)
 			v.save()
 		player_obj.immunity = True
-		transfer_to_bank(room_obj, 5)
-		player_obj.coins = player_obj.coins - 5
+		transfer_to_bank(room_obj, 10)
+		player_obj.coins = player_obj.coins - 10
 		player_obj.save()
 
 @sync_to_async
