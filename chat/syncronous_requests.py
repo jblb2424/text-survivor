@@ -129,7 +129,6 @@ def handle_round_end(ret_dict, room_obj): #
 
 			if player_vote.votee == player.player_objective:
 				coin_bonus += room_obj.bank
-				points += 1
 				room_obj.bank = 0
 				ret_dict['bank_winner'] = player.name
 			player.points = points
