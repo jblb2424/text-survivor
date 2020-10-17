@@ -335,7 +335,7 @@ $( document ).ready(function() {
   }
 
   function validateImmunity() {
-    if(state.coins < 5 || state.survivor_names.length < 4 || state.hasVoted) {
+    if(state.coins < 10 || state.survivor_names.length < 4 || state.hasVoted) {
       yourButtonDOM.addClass('disabled')
     } else {
       yourButtonDOM.removeClass('disabled')

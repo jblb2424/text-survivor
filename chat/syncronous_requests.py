@@ -97,7 +97,7 @@ def handle_round_end(ret_dict, room_obj): #
 	if len(ret_dict.get('current_losers')) == 0:
 		message = 'Nobody voted this round!'
 	else:
-		message = ', '.join(ret_dict['current_losers']) + ' has been eliminated.'
+		message = ', '.join(ret_dict['current_losers']) + ' has been robbed!'
 
 	ret_dict['round_over'] = True
 	ret_dict['receiver'] = room_obj.name
@@ -120,7 +120,8 @@ def handle_round_end(ret_dict, room_obj): #
 		voted_for = Player.objects.get(name = player_vote.votee)
 		if voted_for in loser_players: #Player voted the correct person out
 			coin_bonus = voted_for.coin_loss_distribution // voted_for.num_voted_for
-			points = 1
+			points = player.points
+			points += 1
 			voted_for.coin_loss_distribution = voted_for.coin_loss_distribution - coin_bonus
 			
 
@@ -150,7 +151,7 @@ def handle_round_end_immunity(ret_dict, room_obj): #
 	ret_dict['round_over'] = True
 	ret_dict['receiver'] = room_obj.name
 	ret_dict['player'] = 'ANNOUNCEMENT'
-	ret_dict['message'] = ', '.join(ret_dict['current_losers']) + "has been eliminated, but has immunity! They will take half of the voters' coins"
+	ret_dict['message'] = ', '.join(ret_dict['current_losers']) + "would have been eliminated, but has immunity! They will take half of the voters' coins"
 
 	immunity_players = Player.objects.filter(name__in=ret_dict['current_losers'])
 	immunity_players_names = [player.name for player in immunity_players]
