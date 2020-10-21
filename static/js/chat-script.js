@@ -47,6 +47,10 @@ const roundDOM = $('.round')
 const bankDOM = $('.bank-coin-count')
 const yourButtonDOM = $('.your-button')
 const playerObjectiveDOM = $('.player-objective')
+const htpDOM = $('.htp-modal')
+const intelMoreInfoDOM = $('.intel-more-info-icon')
+const intelMoreInfoModalDOM = $('#intel-more-info-modal')
+const intelMoreInfoCloseDOM = $('.intel-more-info-close')
 
 $( document ).ready(function() {
   bountiesDOM.hide()
@@ -128,6 +132,8 @@ $( document ).ready(function() {
   function hideModals() {
     actionModalDOM.hide()
     gameOverDOM.hide()
+    htpDOM.hide()
+    intelMoreInfoModalDOM.hide()
   }
 
   function renderBank() {
@@ -589,11 +595,30 @@ $( document ).ready(function() {
     }))
   })
 
-
-  //// Intel Card Clicks ////
   $('.message-card').click(e=> {
     showModal('message_card')
   })
+  
+  $('.htp').click(e => {
+    htpDOM.show()
+  })
+    $('.htp-close').click(e => {
+    htpDOM.hide()
+  })
+
+  intelMoreInfoDOM.click(e => {
+    intelMoreInfoModalDOM.show()
+  })
+
+  intelMoreInfoDOM.click(e => {
+    intelMoreInfoModalDOM.show()
+  })
+  intelMoreInfoCloseDOM.click(e => {
+    intelMoreInfoModalDOM.hide()
+  })
+
+
+  //// Intel Card Clicks ////
 
   $('.vote-card').click(e=> {
     chatSocket.send(JSON.stringify({

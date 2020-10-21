@@ -23,6 +23,32 @@
     </div>
 </div>
 
+<div class='modal-wrapper htp-modal' id='htp-modal'>
+    <div class='htp-modal game-modal'> 
+        <div class='modal-header'> 
+            Welcome To Robber Room
+        </div>
+        <div class='modal-body'>
+            <span class='htp-header'> Objective:</span>  
+            <span class='htp-text'> Obtain 10 Victory Points (Win by 2) </span> 
+            <span class='htp-header'>How to obtain victory points: </span> 
+            <span class='htp-text'> Successfully rob a player </span>
+            <span class='htp-header'> How to Rob a Player: </span>
+            <span class='htp-text'> Whoever receives the most votes gets robbed. Convince others to band with you against another teamate! </span>
+            <span class='htp-header'>  What happens to the player that is robbed? </span> 
+            <span class='htp-text'> They lose half of their coins. The lost coins are split among the players who robbed them. Ties are settled by coins: Whoever has the least amount of coins get robbed. </span>
+            <span class='htp-header'>  What can you do with coins? </span> 
+            <div class='intel-desc'> <i class="fas fa-money-bill-wave"></i><span>Set bounties on players to up the reward for trying to rob that player</span> </div>
+            <div class='intel-desc'> <i class="fas fa-star"></i><span>Purchase an immunity. If players try to rob you when you have an immunity, you will steal half of all of their coins, and gain a victory point!</span> </div>
+            <div class='intel-desc'><i class="fas fa-donate"></i><span>Straight up donate coins to players</span> </div>
+            <div class='intel-desc htp-text'> <i class="fas fa-brain"></i><span>Gather Intelligence on other players’ actions</span> </div>
+            <span class='htp-header'> When I spend coins, where does it go? </span>  
+            <span class='htp-text'> The Bank! Money from the bank is awarded to those who complete their bank bonuses. Bank bonus opportunities appear at random and stick around for only a few rounds, so act wisely! </span> 
+            <div class='action-accept htp-close'> Got It! </div>
+        </div>
+    </div>
+</div>
+
 <div class='modal-wrapper' id='game-over-modal'>
     <div class='game-over-modal game-modal'> 
         <div class='modal-header'> 
@@ -30,6 +56,18 @@
         </div>
         <div class='modal-body'>
             <span class='winner-text'> </span> 
+        </div>
+    </div>
+</div>
+
+<div class='modal-wrapper' id='intel-more-info-modal'>
+    <div class='intel-more-info-modal game-modal'> 
+        <div class='modal-body'>
+          <div class='intel-desc'> <i class="far fa-comments intel-icon intel-more-info"></i><span>View private messages of the selected player</span> </div>
+          <div class='intel-desc'> <i class="fas fa-user-times intel-icon intel-more-info"></i><span>View everyone who voted you out in the past 3 rounds</span> </div>  
+          <div class='intel-desc'> <i class="fas fa-question intel-more-info"></i><span>Send an anonymous message publically or privately</span> </div>   
+          <div class='intel-desc'> <i class="fas fa-poll intel-icon intel-more-info"></i><span>View who the selected player has been voting for</span> </div>   
+          <div class='action-accept intel-more-info-close'> Got It! </div>          
         </div>
     </div>
 </div>
@@ -57,7 +95,7 @@
             </div>
         </div>
 
-        
+
         <div class='bank you-are'>
             <img src='{% static 'bank.png' %}' class='bank-img'></img>
             <div class='bank-count-wrapper coin-info'>
@@ -68,6 +106,9 @@
             </div>             
         </div>
         <div class='round-info-wrapper'>
+            <div class='htp you-are'> 
+                <span class='htp-label'> How to Play </span>
+            </div>
             <div class='round-wrapper'>
                 <span class='round'> 1 </span>
                 <span class='round-label'> Round </span>
@@ -170,7 +211,7 @@
                 </div>
 
                <div class='action'>
-                    <div class='action-label'> Intel </div>
+                    <div class='action-label'> Intel <i class="fas fa-info-circle intel-more-info-icon"></i> </div>
                     <div class='action-wrapper intel-items'>
 
                         <div class='intel-card'>
