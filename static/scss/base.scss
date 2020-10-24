@@ -382,6 +382,7 @@ input[type=number] {
       border: none;
       font-size: 14px;
       font-weight: 300;
+      line-height: 26px;
       outline: none;
       line-height: 20px;
       padding-left: 4px;
@@ -527,6 +528,11 @@ input[type=number] {
         display:flex;
         align-items: center;
         justify-content: center;
+        .leaderboard-icon {
+          margin-right: 12px;
+          margin-left: 8px;
+          font-size: 16px;
+        }
         .score-row {
           width: 85%;
           padding-left: 12px;
@@ -539,12 +545,28 @@ input[type=number] {
           border-radius: 5px;
           padding: 4px;
           box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.22);
+          .lederboard-player-metadata {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            height: 49px;
+          }
           .leaderboard-point {
             color: #E85A4F;
+            font-size: 16px;
+          }
+          .leaderboard-coins {
+            font-size:16px;
+            margin-left: 8px;
           }
           .leaderboard-name {
             text-align: center;
-            border-bottom: 1px dashed;
+          }
+          .vote-check {
+            font-size: 28px;
+            margin-top: 8px;
+            margin-left: 8px;
+            color: #E85A4F;
           }
         }
       }
@@ -559,6 +581,9 @@ input[type=number] {
       padding: 8px;
       border-radius: 12px;
       .leaderboard-coins-row {
+        display: flex;
+      }
+      .leaderboard-points-row {
         display: flex;
       }
     }

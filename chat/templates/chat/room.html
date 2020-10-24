@@ -180,12 +180,13 @@
                         {% for survivor in survivors %}
                             <div class='score-row'> 
                                 <span class='leaderboard-name'> {{ survivor.name }} </span> 
-                                <div>
-                                    <span> Victory Points:
+                                <div class='lederboard-player-metadata'>
+                                <div class = 'leaderboard-points-row'>
+                                    <span> <span class= 'leaderboard-icon'> <i class="fas fa-trophy"></i> </span>
                                     <span class='point-count leaderboard-point' data-survivor={{ survivor.name }}> 0 </span>
                                 </div>
                                 <div class='leaderboard-coins-row'>
-                                    <span> Coins: </span> 
+                                    <span class= 'leaderboard-icon'> <i class="fas fa-coins"></i> </span> 
                                     <span>
                                         <div class='coin-info'>
                                             <div class='coin-count leaderboard-coins' data-survivor={{ survivor.name }}> 5 </div>
@@ -193,7 +194,9 @@
                                         </div>          
                                     </span>
                                 </div>
+                                <span class='vote-check'> <i class="far fa-check-circle"></i> </span>
                             </div>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
