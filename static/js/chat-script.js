@@ -27,7 +27,8 @@ window.initChat = (
     playerObjective: '',
     leaderboard: {},
     leaderboardCoins: {},
-    player: player
+    player: player,
+    voted: []
   }
 
 //DOM Elements
@@ -194,6 +195,7 @@ $( document ).ready(function() {
       $('.vote-button').removeClass('disabled')
     }
     var leaderboardDiv = $('.score-row').clone()[0]
+    $(leaderboardDiv).attr('data-survivor', new_player)
     $(leaderboardDiv).find('.leaderboard-point').attr('data-survivor', new_player)
     $(leaderboardDiv).find('.leaderboard-name').text(new_player)
 
@@ -222,7 +224,13 @@ $( document ).ready(function() {
       coinRowDiv.text(coins)
       if(survivor == state.player) {
         scoreRow.addClass('is-you-leaderboard')
-      } 
+      }  else {
+        scoreRow.removeClass('is-you-leaderboard')
+      }
+      if(state.voted.includes(survivor)) {
+        scoreRow.addClass('i_voted')
+      }
+
     }
   }
 
@@ -370,6 +378,7 @@ $( document ).ready(function() {
         document.querySelector('#chat-log').value += ( label + data.message + '\n');
         $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
     }
+
 
     if(data.is_disconnect || data.is_connect) { 
       connectionMessage(data)
