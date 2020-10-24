@@ -52,9 +52,11 @@ const htpDOM = $('.htp-modal')
 const intelMoreInfoDOM = $('.intel-more-info-icon')
 const intelMoreInfoModalDOM = $('#intel-more-info-modal')
 const intelMoreInfoCloseDOM = $('.intel-more-info-close')
+const votedDOM = $('.vote-check')
 
 $( document ).ready(function() {
   bountiesDOM.hide()
+  votedDOM.hide()
   const savedSession = localStorage.getItem(room) && JSON.parse(localStorage.getItem(room)) || state
   state = savedSession
   for (var key in survivors) {
@@ -228,7 +230,9 @@ $( document ).ready(function() {
         scoreRow.removeClass('is-you-leaderboard')
       }
       if(state.voted.includes(survivor)) {
-        scoreRow.addClass('i_voted')
+        scoreRow.find('.vote-check').show()
+      } else {
+        scoreRow.find('.vote-check').hide()
       }
 
     }
@@ -379,6 +383,11 @@ $( document ).ready(function() {
         $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
     }
 
+    if(data.type === 'receive_vote') {
+      state.voted.push(data.player)
+      renderLeaderboad()
+      saveState()
+    }
 
     if(data.is_disconnect || data.is_connect) { 
       connectionMessage(data)
@@ -409,6 +418,8 @@ $( document ).ready(function() {
 
     //kick loser(s) if round over
     if(data.round_over === true) {
+      state.voted = []
+      votedDOM.hide()
       state.current_losers = data.current_losers
       state.hasVoted = false
       state.coins = data.coins

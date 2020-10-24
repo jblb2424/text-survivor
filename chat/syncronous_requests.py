@@ -194,13 +194,7 @@ def remove_player(loser, room_obj):
 		room_obj.save()
 
 def handle_regular_vote(ret_dict, room_obj, voter):
-	ret_dict['player'] = 'ANNOUNCEMENT'
-	all_current_votes =  Vote.objects.filter(room=room_obj).values_list('voter', flat=True)
-	all_current_players = Player.objects.filter(room=room_obj).values_list('name', flat=True)
-	have_not_voted = [player for player in all_current_players if player not in all_current_votes]
-	ret_dict_message = voter + ' has voted.'
-	ret_dict['receiver'] = room_obj.name
-	ret_dict['message'] = ret_dict_message
+	ret_dict['player'] = voter
 
 
 #This function does all of the heavy lifting for deciding whena rpound ends, who lost, and what states must update
