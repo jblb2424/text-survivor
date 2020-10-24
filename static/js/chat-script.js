@@ -217,8 +217,12 @@ $( document ).ready(function() {
       const coins = state.leaderboardCoins[`${survivor}`]
       const rowDiv = $(`.point-count[data-survivor=${survivor}]`)
       const coinRowDiv = $(`.leaderboard-coins[data-survivor=${survivor}]`)
+      const scoreRow = $(`.score-row[data-survivor=${survivor}]`)
       rowDiv.text(points)
       coinRowDiv.text(coins)
+      if(survivor == state.player) {
+        scoreRow.addClass('is-you-leaderboard')
+      } 
     }
   }
 

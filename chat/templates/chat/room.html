@@ -178,8 +178,8 @@
                     <div class='leaderboard-header control-header'> Leaderboard </div>
                     <div class='leaderboard'> 
                         {% for survivor in survivors %}
-                            <div class='score-row'> 
-                                <span class='leaderboard-name'> {{ survivor.name }} </span> 
+                            <div class='score-row' data-survivor={{ survivor.name }}> 
+                                <span class='leaderboard-name' player-name={{ survivor.name }}> {{ survivor.name }} </span> 
                                 <div class='lederboard-player-metadata'>
                                 <div class = 'leaderboard-points-row'>
                                     <span> <span class= 'leaderboard-icon'> <i class="fas fa-trophy"></i> </span>

@@ -534,6 +534,9 @@ input[type=number] {
           font-size: 16px;
         }
         .score-row {
+          &.is-you-leaderboard {
+            box-shadow: 0 0 10px #1F7B27;
+          }
           width: 85%;
           padding-left: 12px;
           margin-bottom: 6px;
