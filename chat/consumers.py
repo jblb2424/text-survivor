@@ -80,6 +80,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         #aggregate vote information
         results  = await aggregate_votes(room_obj, voter)
+        player_obj = await database_sync_to_async(Player.objects.get)(name=self.player_name)
+        await self.send(text_data=json.dumps({'updated_immunity_price': player_obj.immunity_price}))
         await self.channel_layer.group_send(
                 self.room_group_name,
                 results

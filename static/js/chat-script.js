@@ -28,7 +28,8 @@ window.initChat = (
     leaderboard: {},
     leaderboardCoins: {},
     player: player,
-    voted: []
+    voted: [],
+    immunity_price: 10
   }
 
 //DOM Elements
@@ -53,7 +54,7 @@ const intelMoreInfoDOM = $('.intel-more-info-icon')
 const intelMoreInfoModalDOM = $('#intel-more-info-modal')
 const intelMoreInfoCloseDOM = $('.intel-more-info-close')
 const votedDOM = $('.vote-check')
-
+const immunityPriceDOM = $('.immunity-price')
 $( document ).ready(function() {
   bountiesDOM.hide()
   votedDOM.hide()
@@ -168,6 +169,9 @@ $( document ).ready(function() {
   function hasVotedRender() {
     $('.vote-button').addClass('disabled');
     $(`.survivor-wrapper[data-survivor=${state.votee}]`).find('.survivor-pill').addClass('voted-out')
+  }
+  function renderImmunityPrice() {
+    immunityPriceDOM.text(state.immunity_price)
   }
 
 
@@ -357,7 +361,7 @@ $( document ).ready(function() {
   }
 
   function validateImmunity() {
-    if(state.coins < 10 || state.survivor_names.length < 4 || state.hasVoted) {
+    if(state.coins < state.immunity_price || state.survivor_names.length < 4 || state.hasVoted) {
       yourButtonDOM.addClass('disabled')
     } else {
       yourButtonDOM.removeClass('disabled')
@@ -381,6 +385,12 @@ $( document ).ready(function() {
         var label = formatMessage(privateMessage, isOwnPrivateMessage, roomMessage, data)
         document.querySelector('#chat-log').value += ( label + data.message + '\n');
         $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
+    }
+
+    if(data.updated_immunity_price) {
+      state.immunity_price = data.updated_immunity_price
+      renderImmunityPrice()
+      saveState()
     }
 
     if(data.type === 'receive_vote') {

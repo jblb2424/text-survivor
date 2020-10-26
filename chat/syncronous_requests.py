@@ -216,8 +216,6 @@ def format_votes(grouped_players, all_current_players, room_obj, voter):
 		super_loser = Player.objects.filter(name__in=list_of_losers).values_list('name').annotate(Min('coins')).order_by('coins')[0]
 		ret_dict['current_losers'] = [super_loser[0]] 
 	
-	
-
 	all_current_votes =  Vote.objects.filter(room=room_obj, game_round=room_obj.game_round)
 	round_ended = len(all_current_players) <= len(all_current_votes)
 	final_round = len(all_current_players) - len(list_of_losers) == 2 and round_ended
@@ -273,10 +271,11 @@ def save_vote(event, room):
 		v = Vote(voter=event['player'], votee=event['votee'], room=room, game_round=room.game_round, is_immunity=is_immunity)
 		
 		player_obj = Player.objects.get(name=event['player'])
-		if is_immunity and player_obj.coins >= 5:
+		if is_immunity and player_obj.coins >= player_obj.immunity_price:
 			player_obj.immunity = True
-			player_obj.coins  = player_obj.coins - 5
-			transfer_to_bank(room, 5)
+			player_obj.coins  = player_obj.coins - player_obj.immunity_price
+			transfer_to_bank(room, player_obj.immunity_price)
+			player_obj.immunity_price = player_obj.immunity_price + 5
 			player_obj.save()
 
 		v.save()
@@ -360,6 +359,7 @@ def see_votes_from_player(player_to_see_votes, room_obj, player):
 
 @sync_to_async
 def activate_immunity(player, room_obj):
+	print('activate_immunity')
 	player_obj = Player.objects.get(name=player)
 	print(player_obj.coins)
 	if player_obj.coins >= 10:

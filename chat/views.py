@@ -101,6 +101,7 @@ def room(request, room_name):
 		new_player.voted_for_you_price = voted_for_you_price
 		new_player.player_vote_price = player_vote_price
 		new_player.see_messages_price = see_messages_price
+		new_player.immunity_price = 10
 		new_player.save()
 
 		request.session[room_name] = unique_name_word
